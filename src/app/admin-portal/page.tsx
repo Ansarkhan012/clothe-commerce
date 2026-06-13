@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Package, ShoppingCart, Users, TrendingUp, Plus, Edit, Trash2, LogOut } from "lucide-react";
+import { Package, ShoppingCart, Users, TrendingUp, Plus, Edit, Trash2, LogOut, AlertTriangle } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/Client";
 import { Order, Product } from "@/src/types/supabase";
 import { useRouter } from "next/navigation";
@@ -11,34 +11,96 @@ export default function AdminPortalPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const [error, setError] = useState<string | null>(null);
+  const [supabaseReady, setSupabaseReady] = useState(false);
   const router = useRouter();
 
+  // Check if Supabase env vars are available
   useEffect(() => {
-    fetchData();
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!url || !key) {
+      setError("Supabase configuration missing. Please add environment variables.");
+      setLoading(false);
+      return;
+    }
+    
+    setSupabaseReady(true);
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    
-    const { data: ordersData } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+  const supabase = supabaseReady ? createClient() : null;
 
-    setOrders(ordersData || []);
-    setProducts(productsData || []);
-    setLoading(false);
+  useEffect(() => {
+    if (supabaseReady) {
+      fetchData();
+    }
+  }, [supabaseReady]);
+
+  const fetchData = async () => {
+    if (!supabase) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (ordersError) throw ordersError;
+      
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (productsError) throw productsError;
+
+      setOrders(ordersData || []);
+      setProducts(productsData || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch data from Supabase");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push('/');
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    if (!supabase) return;
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: newStatus })
+        .eq('id', orderId);
+        
+      if (error) throw error;
+      fetchData();
+    } catch (err: any) {
+      alert("Error updating status: " + err.message);
+    }
+  };
+
+  const deleteProduct = async (productId: string) => {
+    if (!supabase) return;
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) throw error;
+      fetchData();
+    } catch (err: any) {
+      alert("Error deleting product: " + err.message);
+    }
   };
 
   const totalRevenue = orders.reduce((acc, order) => acc + Number(order.total_amount), 0);
@@ -51,19 +113,35 @@ export default function AdminPortalPage() {
     { label: "Customers", value: "1,204", icon: Users, change: "Registered" },
   ];
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    await supabase
-      .from('orders')
-      .update({ order_status: newStatus })
-      .eq('id', orderId);
-    fetchData();
-  };
-
-  const deleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    await supabase.from('products').delete().eq('id', productId);
-    fetchData();
-  };
+  // Show error state if Supabase not configured
+  if (error && !supabaseReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-bg">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="text-error" size={40} />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-primary mb-3">Configuration Required</h1>
+          <p className="text-muted mb-2">{error}</p>
+          <div className="bg-surface border border-border p-4 rounded-lg mt-6 text-left">
+            <p className="text-sm font-medium text-primary mb-2">Add these environment variables:</p>
+            <code className="block bg-bg p-2 rounded text-xs text-accent mb-2">
+              NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+            </code>
+            <code className="block bg-bg p-2 rounded text-xs text-accent">
+              NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+            </code>
+          </div>
+          <button 
+            onClick={() => router.push('/')}
+            className="mt-6 px-6 py-3 bg-accent text-white text-sm font-semibold tracking-wider uppercase hover:bg-accent-dark transition-all"
+          >
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
