@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --color-primary:     #1a1a1a;
+  --color-accent:      #c9a96e;
+  --color-accent-dark: #a8883f;
+  --color-bg:          #f5f0ea;
+  --color-surface:     #ffffff;
+  --color-muted:       #6b6560;
+  --color-border:      #e8e2da;
+  --color-success:     #3a7a3a;
+  --color-error:       #d4453a;
+}
+
+@theme {
+  /* Tailwind mein custom colors */
+  --color-primary:     #1a1a1a;
+  --color-accent:      #c9a96e;
+  --color-accent-dark: #a8883f;
+  --color-bg:          #f5f0ea;
+  --color-surface:     #ffffff;
+  --color-muted:       #6b6560;
+  --color-border:      #e8e2da;
+  --color-success:     #3a7a3a;
+  --color-error:       #d4453a;
+
+  /* Fonts */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-primary);
+  font-family: var(--font-body);
+}
