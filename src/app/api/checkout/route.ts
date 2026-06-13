@@ -9,9 +9,9 @@ export async function POST(request: Request) {
 
     const formValidation = CheckoutSchema.safeParse(body);
     if (!formValidation.success) {
-      const errors = formValidation.error.errors.map(e => 
-        `${e.path.join('.')}: ${e.message}`
-      ).join(', ');
+      const errors = formValidation.error.issues
+  .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+  .join(', ');;
       return NextResponse.json({ 
         success: false, 
         message: `Validation failed: ${errors}` 
