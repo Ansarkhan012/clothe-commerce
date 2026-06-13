@@ -19,7 +19,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Zari & Taanka | Premium Pakistani Fashion",
+  title: "Zaisha's Febrics | Premium Pakistani Fashion",
   description: "Authentic Pakistani clothing - Lawn, Chiffon, Silk, and Embroidered Collections",
 };
 

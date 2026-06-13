@@ -6,10 +6,10 @@ import { Search, Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Calend
 import Link from "next/link";
 
 const statusSteps = [
-  { status: "pending", label: "Order Diya Gaya", icon: Clock },
-  { status: "processing", label: "Taiyaari Ho Rahi Hai", icon: Package },
-  { status: "shipped", label: "Raste Mein Hai", icon: Truck },
-  { status: "delivered", label: "Pahunch Gaya", icon: CheckCircle },
+  { status: "pending", label: "Order Placed", icon: Clock },
+  { status: "processing", label: "Bieng Prepared", icon: Package },
+  { status: "shipped", label: "On the Way", icon: Truck },
+  { status: "delivered", label: "Delivered", icon: CheckCircle },
 ];
 
 const statusColors: Record<string, string> = {
@@ -21,11 +21,11 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  pending: "Order Diya Gaya",
-  processing: "Taiyaari Ho Rahi Hai",
-  shipped: "Raste Mein Hai",
-  delivered: "Pahunch Gaya",
-  cancelled: "Cancel Ho Gaya",
+  pending: "Order Placed",
+processing: "Being Prepared",
+shipped: "On the Way",
+delivered: "Delivered",
+cancelled: "Cancelled",
 };
 
 export default function TrackOrderPage() {
@@ -48,10 +48,17 @@ export default function TrackOrderPage() {
     try {
       let query = supabase.from("orders").select("*");
 
+      // ✅ order_number se search (integer)
       if (orderId) {
-        query = query.ilike("id", `%${orderId}%`);
+        const parsed = parseInt(orderId);
+        if (isNaN(parsed)) {
+          setError("The Order ID should contain only numbers, for example: 10001.");
+          setLoading(false);
+          return;
+        }
+        query = query.eq("order_number", parsed);
       }
-      
+
       if (phoneNumber) {
         query = query.eq("phone_number", phoneNumber);
       }
@@ -63,13 +70,13 @@ export default function TrackOrderPage() {
       if (supabaseError) throw supabaseError;
 
       if (!data || data.length === 0) {
-        setError("Koi order nahi mila. Please check your Order ID ya phone number.");
+        setError("No order was found. Please check your Order ID or phone number.");
         return;
       }
 
       setOrder(data[0]);
     } catch (err: any) {
-      setError("Kuch galat ho gaya. Dobara try karein.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -88,10 +95,10 @@ export default function TrackOrderPage() {
           <Truck className="text-accent" size={28} />
         </div>
         <h1 className="font-display text-4xl font-bold text-primary mb-2">
-          Order Track Karein
+          Order Track
         </h1>
         <p className="text-muted">
-          Apna Order ID ya phone number se apna order track karein
+          Track your order using your Order ID or phone number.
         </p>
       </div>
 
@@ -103,11 +110,11 @@ export default function TrackOrderPage() {
               Order ID
             </label>
             <input
-              type="text"
+              type="number"  
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
               className="w-full px-4 py-3 bg-bg border border-border focus:border-accent focus:outline-none transition-colors"
-              placeholder="e.g., 2901d797..."
+              placeholder="e.g., 10001"  
             />
           </div>
           <div>
@@ -128,7 +135,7 @@ export default function TrackOrderPage() {
           disabled={loading || (!orderId && !phoneNumber)}
           className="w-full sm:w-auto px-8 py-3 bg-accent hover:bg-accent-dark disabled:opacity-50 text-white text-sm font-semibold tracking-wider uppercase transition-all flex items-center justify-center gap-2"
         >
-          {loading ? "Dhoondh rahe hain..." : <><Search size={16} /> Order Dhoondhein</>}
+          {loading ? "Dhoondh rahe hain..." : <><Search size={16} />Find Order</>}
         </button>
       </form>
 
@@ -148,7 +155,8 @@ export default function TrackOrderPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <p className="text-xs text-muted uppercase tracking-wider mb-1">Order ID</p>
-                <p className="font-display text-xl font-bold text-primary">#{order.id.slice(0, 8)}</p>
+                {/* ✅ order_number show karo */}
+                <p className="font-display text-xl font-bold text-primary">#{order.order_number}</p>
               </div>
               <span className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider border rounded-sm ${statusColors[order.order_status] || statusColors.pending}`}>
                 {statusLabels[order.order_status] || order.order_status}
@@ -166,13 +174,11 @@ export default function TrackOrderPage() {
 
                   return (
                     <div key={step.status} className="flex flex-col items-center flex-1 relative">
-                      {/* Connecting Line */}
                       {index < statusSteps.length - 1 && (
                         <div className={`absolute top-4 left-1/2 w-full h-0.5 -translate-y-1/2 ${
                           index < currentStep ? "bg-accent" : "bg-border"
                         }`} />
                       )}
-                      {/* Icon */}
                       <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                         isActive
                           ? "bg-accent border-accent text-white"
@@ -295,7 +301,7 @@ export default function TrackOrderPage() {
               href="/"
               className="inline-flex items-center gap-2 text-accent hover:text-accent-dark transition-colors text-sm font-medium"
             >
-              <ArrowLeft size={16} /> Aur Shopping Karein
+              <ArrowLeft size={16} /> Continue Shopping
             </Link>
           </div>
         </div>
@@ -305,8 +311,8 @@ export default function TrackOrderPage() {
       {!searched && !order && !error && (
         <div className="text-center py-16">
           <Package className="mx-auto text-muted mb-4" size={48} strokeWidth={1} />
-          <p className="text-muted text-lg">Apna Order ID ya phone number dalein</p>
-          <p className="text-muted text-sm mt-2">Order ID aapke confirmation message mein hai</p>
+          <p className="text-muted text-lg">Enter your Order ID or phone number.</p>
+          <p className="text-muted text-sm mt-2">Your Order ID can be found in your order confirmation message.</p>
         </div>
       )}
     </div>

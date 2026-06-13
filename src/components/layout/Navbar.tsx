@@ -22,7 +22,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-border">
       {/* Top Bar */}
       <div className="bg-primary text-white text-xs text-center py-2 tracking-widest uppercase font-medium">
-        ✨ Free Delivery on Orders Above Rs. 5,000 | Cash on Delivery Available
+         Free Delivery on Orders Above Rs. 5,000 | Cash on Delivery Available
       </div>
 
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +38,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-primary tracking-tight">
-              Zari <span className="text-accent">&</span> Taanka
+              Zaisha <span className="text-accent">&</span> Febrics
             </h1>
           </Link>
 
