@@ -1,15 +1,16 @@
 import HeroSection from "../components/home/HeroSection";
 import { ProductCard } from "../components/common/ProductCard";
 import Link from "next/link";
-import { ArrowRight, Truck, Shield, RotateCcw, Headphones } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "../lib/supabase/Client";
 import { Product } from "../types/supabase";
 
 const features = [
-  { icon: Truck, title: "Free Shipping", desc: "On orders above Rs. 5,000" },
-  { icon: Shield, title: "Authentic Products", desc: "100% genuine Pakistani fabric" },
-  { icon: RotateCcw, title: "Easy Returns", desc: "7-day return policy" },
-  { icon: Headphones, title: "24/7 Support", desc: "Dedicated customer service" },
+  { title: "Free Shipping", desc: "On orders above Rs. 5,000 across Pakistan" },
+  { title: "Authentic Fabrics", desc: "100% genuine premium raw material" },
+  { title: "7-Day Exchange", desc: "Hassle-free size & article switches" },
+  { title: "Bespoke Support", desc: "24/7 dedicated customer care helpline" },
 ];
 
 const categories = [
@@ -21,7 +22,7 @@ const categories = [
 export default async function HomePage() {
   const supabase = await createClient();
   
-  // Fetch real products from Supabase
+  // Fetch products from Supabase directly on the server
   const { data: featuredProducts } = await supabase
     .from('products')
     .select('*')
@@ -29,127 +30,126 @@ export default async function HomePage() {
     .limit(8);
 
   return (
-    <div>
+    <div className="bg-white text-black antialiased selection:bg-amber-100">
+      
+      {/* 1. HERO SECTION BANNER */}
       <HeroSection />
 
-      {/* Features Bar */}
-      <section className="bg-primary py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {features.map((feature) => (
-              <div key={feature.title} className="flex items-center gap-3 text-white">
-                <feature.icon className="text-accent shrink-0" size={24} />
-                <div>
-                  <h4 className="font-semibold text-sm">{feature.title}</h4>
-                  <p className="text-white/60 text-xs">{feature.desc}</p>
-                </div>
+      {/* 2. MINIMALIST FEATURES BAR (KHAADI EDITORIAL STYLE) */}
+      <section className="bg-neutral-50 py-6 border-y border-gray-100">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 divide-x-0 md:divide-x divide-gray-200">
+            {features.map((feature, idx) => (
+              <div key={feature.title} className={`text-center ${idx > 0 ? 'md:pl-4' : ''}`}>
+                <h4 className="text-xs tracking-widest font-medium uppercase text-amber-800">{feature.title}</h4>
+                <p className="text-[11px] text-gray-500 font-light mt-0.5">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <span className="text-accent font-medium tracking-wider uppercase text-sm">Browse By</span>
-          <h2 className="font-display text-4xl font-bold text-primary mt-2">Our Collections</h2>
-          <div className="w-16 h-0.5 bg-accent mx-auto mt-4" />
+      {/* 3. CLEAN COLLECTIONS CATEGORIES GRID */}
+      <section className="py-20 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+        <div className="text-center mb-14">
+          <span className="text-[10px] tracking-[0.3em] font-semibold text-amber-700 uppercase">Curated Seasonal Lines</span>
+          <h2 className="text-2xl sm:text-3xl font-light tracking-widest text-gray-950 uppercase mt-2">Shop Our Collections</h2>
+          <div className="w-12 h-[1px] bg-amber-600/60 mx-auto mt-4" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {categories.map((cat) => (
-            <Link
-              key={cat.title}
-              href="/collections"
-              className="group relative h-80 overflow-hidden rounded-sm"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                style={{ backgroundImage: `url('${cat.image}')` }}
-              />
-              <div className="absolute inset-0 bg-primary/40 group-hover:bg-primary/50 transition-colors" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <h3 className="font-display text-2xl font-bold">{cat.title}</h3>
-                <p className="text-white/80 text-sm mt-2">{cat.count}</p>
-                <span className="mt-4 text-accent text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                  Explore →
-                </span>
+            <Link key={cat.title} href="/collections" className="group flex flex-col bg-white">
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-50">
+                <Image
+                  src={cat.image}
+                  alt={cat.title}
+                  fill
+                  className="object-cover transition-transform duration-[1000ms] ease-out group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
+              <div className="pt-4 text-center">
+                <h3 className="text-sm font-light tracking-widest text-gray-900 uppercase group-hover:text-amber-800 transition-colors">
+                  {cat.title}
+                </h3>
+                <p className="text-[11px] text-gray-400 font-light tracking-wide mt-1">{cat.count}</p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Featured Products - REAL DATA */}
-      <section className="py-20 bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-12">
+      {/* 4. FEATURED PRODUCTS GRID */}
+      <section className="py-20 bg-neutral-50/50 border-t border-gray-100">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+          
+          <div className="flex items-end justify-between mb-12 border-b border-gray-100 pb-4">
             <div>
-              <span className="text-accent font-medium tracking-wider uppercase text-sm">Handpicked</span>
-              <h2 className="font-display text-4xl font-bold text-primary mt-2">Featured Products</h2>
-              <div className="w-16 h-0.5 bg-accent mt-4" />
+              <span className="text-[10px] tracking-[0.3em] font-semibold text-amber-700 uppercase">The Latest Edit</span>
+              <h2 className="text-2xl sm:text-3xl font-light tracking-widest text-gray-950 uppercase mt-1">Featured Pieces</h2>
             </div>
             <Link
               href="/new-arrivals"
-              className="hidden sm:flex items-center gap-2 text-primary hover:text-accent transition-colors font-medium"
+              className="hidden sm:inline-flex items-center gap-2 text-xs tracking-widest uppercase font-medium text-gray-900 hover:text-amber-800 transition-colors"
             >
-              View All <ArrowRight size={18} />
+              View All <ArrowRight size={14} />
             </Link>
           </div>
 
           {featuredProducts && featuredProducts.length > 0 ? (
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-    {featuredProducts.map((product: Product) => (
-      <ProductCard key={product.id} product={product} />
-    ))}
-  </div>
-) : (
-  <div className="text-center py-16">
-    <p className="text-muted text-lg">No products available yet. Check back soon!</p>
-  </div>
-)}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 lg:gap-x-8">
+              {featuredProducts.map((product: Product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white border border-gray-100">
+              <p className="text-xs tracking-wider text-gray-400 uppercase">New curation arriving shortly. Check back soon!</p>
+            </div>
+          )}
 
-          <div className="mt-8 text-center sm:hidden">
+          <div className="mt-12 text-center sm:hidden">
             <Link
               href="/new-arrivals"
-              className="inline-flex items-center gap-2 text-primary hover:text-accent transition-colors font-medium"
+              className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-medium border border-black px-6 py-3 text-black hover:bg-black hover:text-white transition-all"
             >
-              View All <ArrowRight size={18} />
+              View All Arrivals
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Pakistani Craftsmanship Banner */}
-      <section className="relative py-24 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-fixed"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1920&auto=format&fit=crop')`,
-          }}
-        >
-          <div className="absolute inset-0 bg-primary/70" />
+      {/* 5. HERITAGE GOLD-EMBEDDED CRAFTSMANSHIP BANNER */}
+      <section className="relative py-28 overflow-hidden bg-neutral-950">
+        <div className="absolute inset-0 opacity-25 mix-blend-luminosity pointer-events-none">
+          <Image
+            src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1920&auto=format&fit=crop"
+            alt="Fabric heritage background"
+            fill
+            className="object-cover"
+          />
         </div>
         
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center text-white">
-          <span className="text-accent font-medium tracking-[0.3em] uppercase text-sm">Our Heritage</span>
-          <h2 className="font-display text-4xl sm:text-5xl font-bold mt-4 mb-6">
-            Crafted in Karachi, <span className="text-accent italic">Worn Worldwide</span>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <span className="text-amber-500 font-medium tracking-[0.4em] uppercase text-[10px]">Our Heritage</span>
+          <h2 className="text-3xl sm:text-5xl font-extralight tracking-wide text-white uppercase mt-4 mb-6 leading-tight">
+            Crafted in Karachi, <span className="text-amber-500 font-serif italic">Worn Worldwide</span>
           </h2>
-          <p className="text-white/80 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            Every piece tells a story of Pakistani craftsmanship. From the bustling markets of Karachi 
-            to your wardrobe, we bring you the finest fabrics and intricate embroidery that celebrate 
-            our rich cultural heritage.
+          <p className="text-gray-400 text-sm font-light leading-relaxed max-w-2xl mx-auto mb-10 tracking-wide">
+            Every thread woven speaks volumes of our signature artisans. From the traditional heartbeat 
+            of Karachi's textile landscape directly to your wardrobe, we engineer premium lawn 
+            and rich intricate threadwork that keeps contemporary roots alive.
           </p>
           <Link
             href="/about"
-            className="inline-flex items-center gap-2 border-2 border-accent text-accent hover:bg-accent hover:text-white px-8 py-4 text-sm font-semibold tracking-wider uppercase transition-all duration-300"
+            className="inline-flex items-center border border-amber-600/60 text-amber-400 hover:bg-amber-600 hover:text-black px-8 py-3.5 text-xs tracking-widest uppercase font-medium transition-all duration-500"
           >
-            Our Story
+            Explore Our Story
           </Link>
         </div>
       </section>
+
     </div>
   );
 }

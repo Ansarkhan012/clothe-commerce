@@ -3,194 +3,111 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 
-export default function HeroSection() {
+// Dummy logos to match the bottom partner bar style (Replace with your own icons or text labels)
+const BRAND_PARTNERS = [
+  { name: "O'Melveny", className: "tracking-tight font-serif text-gray-400" },
+  { name: "BRIDGEWATER", className: "tracking-widest font-sans font-black text-gray-500" },
+  { name: "MACFARLANES", className: "tracking-[0.2em] font-serif text-gray-400 text-xs" },
+  { name: "K K R", className: "tracking-[0.3em] font-sans font-bold text-gray-400" },
+  { name: "A&O SHEARMAN", className: "tracking-widest font-sans font-medium text-gray-300" },
+  { name: "Gleiss Lutz", className: "tracking-normal font-serif italic text-gray-400" },
+  { name: "CMS", className: "tracking-tighter font-sans font-extrabold text-gray-400 text-sm" },
+];
+
+export default function HarveyStyleHero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-[var(--color-bg)]">
-      {/* Background Image - Right Side */}
-      <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] xl:w-[55%]">
+    <section className="relative min-h-screen flex flex-col justify-between bg-black text-white overflow-hidden font-sans">
+      
+      
+
+      {/* 2. ABSOLUTE CINEMATIC BACKGROUND WITH INTENSE DARK OVERLAYS */}
+      <div className="absolute inset-0 w-full h-full z-0">
         <Image
-          src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1200&auto=format&fit=crop"
-          alt="Pakistani Fashion Models"
+          src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1600&auto=format&fit=crop" 
+          alt="Premium Boutique Cinematic Background"
           fill
-          className="object-cover object-center"
+          className="object-cover object-center opacity-60" // Controls image brightness
           priority
-          sizes="(max-width: 1024px) 100vw, 60vw"
         />
-        {/* Gradient overlay for text readability on mobile */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-bg)] via-[var(--color-bg)]/80 to-transparent lg:via-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/40 to-transparent lg:hidden" />
+        {/* Dark Radial & Linear Gradients to match the layout exactly */}
+        <div className="absolute inset-0 bg-neutral-950/40 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
       </div>
 
-      {/* Decorative Elements */}
-      <div className="absolute top-12 left-12 w-32 h-32 border border-[var(--color-accent)]/10 rounded-full hidden lg:block" />
-      <div className="absolute bottom-20 right-[40%] w-20 h-20 border border-[var(--color-accent)]/10 rounded-full hidden lg:block" />
-      
-      {/* Subtle pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a96e' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Content - Left Side */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="max-w-xl lg:max-w-lg xl:max-w-xl">
+      {/* 3. CENTER HERO MAIN CONTENT */}
+      <div className="relative z-10 flex-grow flex items-center max-w-[1440px] mx-auto w-full px-6 sm:px-12 lg:px-16 pt-20 pb-12">
+        <div className="max-w-2xl lg:max-w-3xl space-y-6">
           
-          {/* Top Label */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex items-center gap-3 mb-6"
-          >
-            <div className="h-px w-8 bg-[var(--color-accent)]" />
-            <span 
-              className="text-[10px] tracking-[0.4em] uppercase font-medium"
-              style={{ color: "var(--color-accent)", fontFamily: "var(--font-body)" }}
-            >
-              Handcrafted with Tradition
-            </span>
-          </motion.div>
-
-          {/* Main Heading */}
+          {/* Main Title Heading (Harvey Style Big Crisp Typography) */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl text-[var(--color-primary)] leading-[0.95] mb-6"
-            style={{ fontFamily: "var(--font-display)" }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl sm:text-7xl lg:text-8xl font-serif tracking-tight text-white leading-[1.05]"
           >
-            Become
-            <br />
-            Style Icon
-            <br />
-            <span style={{ color: "var(--color-accent)" }}>with Zari</span>
+            Practice Made <br className="hidden sm:block" /> Perfect
           </motion.h1>
 
-          {/* Decorative line */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="w-16 h-0.5 bg-[var(--color-accent)] mb-6 origin-left"
-          />
-
-          {/* Description */}
+          {/* Subtitle Paragraph */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="text-sm md:text-base text-[var(--color-muted)] max-w-md mb-8 leading-relaxed"
-            style={{ fontFamily: "var(--font-body)" }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-base sm:text-xl text-neutral-300 font-light max-w-xl leading-relaxed tracking-wide"
           >
-            Elevate your wardrobe with trendy and elegant styles from Zari & Taanka. 
-            Shop our bestsellers and enjoy authentic Pakistani craftsmanship.
+            Today's top fashion houses and global luxury designers trust Zari to elevate their look and navigate contemporary elegance.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA Action Button */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
-            className="flex flex-col sm:flex-row gap-4"
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="pt-4"
           >
             <Link
               href="/new-arrivals"
-              className="group inline-flex items-center gap-3 px-8 py-4 bg-[var(--color-primary)] text-white text-xs tracking-[0.2em] uppercase font-medium hover:bg-[var(--color-accent)] transition-all duration-300"
+              className="inline-flex items-center justify-center px-6 py-3.5 bg-white text-black hover:bg-amber-600 hover:text-black transition-all duration-300 rounded-sm font-medium text-xs tracking-widest uppercase shadow-lg"
             >
-              Shop Now
-              <svg 
-                className="w-4 h-4 transition-transform group-hover:translate-x-1" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            <Link
-              href="/collections"
-              className="inline-flex items-center gap-2 px-8 py-4 border border-[var(--color-border)] text-[var(--color-primary)] text-xs tracking-[0.2em] uppercase font-medium hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-all duration-300"
-            >
-              All Collections
+              Request a Demo
             </Link>
           </motion.div>
-
-          {/* Stats / Trust badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="flex items-center gap-8 mt-12 pt-8 border-t border-[var(--color-border)]"
-          >
-            <div>
-              <p className="text-2xl font-display font-bold text-[var(--color-primary)]">500+</p>
-              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wider mt-1">Designs</p>
-            </div>
-            <div className="w-px h-10 bg-[var(--color-border)]" />
-            <div>
-              <p className="text-2xl font-display font-bold text-[var(--color-primary)]">15K+</p>
-              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wider mt-1">Happy Customers</p>
-            </div>
-            <div className="w-px h-10 bg-[var(--color-border)]" />
-            <div>
-              <p className="text-2xl font-display font-bold text-[var(--color-primary)]">4.9</p>
-              <p className="text-[10px] text-[var(--color-muted)] uppercase tracking-wider mt-1">Rating</p>
-            </div>
-          </motion.div>
+          
         </div>
       </div>
 
-      {/* Right side floating card - like the image */}
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, delay: 1.2 }}
-        className="hidden xl:block absolute right-12 top-1/2 -translate-y-1/2 max-w-xs"
-      >
-        <div className="bg-white/90 backdrop-blur-sm p-6 border border-[var(--color-border)] shadow-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-[var(--color-accent)]" />
-            <span className="text-[10px] tracking-[0.3em] uppercase text-[var(--color-muted)]">
-              New Collection
-            </span>
+      {/* 4. BOTTOM CREDENTIALS / BRAND PARTNERS BAR */}
+      <div className="relative z-10 w-full bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-transparent pt-16 pb-8 border-t border-white/[0.03]">
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
+          
+          {/* Logo Map Row */}
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-4 opacity-70 hover:opacity-100 transition-opacity duration-300 flex-grow">
+            {BRAND_PARTNERS.map((brand, i) => (
+              <span 
+                key={i} 
+                className={`uppercase text-sm select-none ${brand.className}`}
+              >
+                {brand.name}
+              </span>
+            ))}
           </div>
-          <h3 className="font-display text-xl font-semibold text-[var(--color-primary)] mb-2">
-            Elevate Your Wardrobe
-          </h3>
-          <p className="text-xs text-[var(--color-muted)] leading-relaxed mb-4">
-            Shop our bestsellers and enjoy 15% off your entire order — limited time offer.
-          </p>
-          <Link
-            href="/sale"
-            className="inline-flex items-center gap-2 text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-dark)] font-medium transition-colors"
-          >
-            Shop Now 
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
-        </div>
-      </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-      >
-        <span className="text-[10px] tracking-[0.3em] uppercase text-[var(--color-muted)]">Scroll</span>
-        <div className="w-px h-8 bg-[var(--color-accent)]/40 relative overflow-hidden">
-          <motion.div
-            animate={{ y: [0, 32] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="w-full h-1/2 bg-[var(--color-accent)]"
-          />
+          {/* Right Action Trigger Box */}
+          <div className="flex-shrink-0">
+            <Link 
+              href="/collections"
+              className="inline-flex items-center gap-2 border border-white/20 hover:border-white px-5 py-2.5 rounded-sm text-xs tracking-wider uppercase font-medium bg-neutral-900/40 text-neutral-200 transition-all duration-300"
+            >
+              Our Customers
+            </Link>
+          </div>
+
         </div>
-      </motion.div>
+      </div>
+
     </section>
   );
 }

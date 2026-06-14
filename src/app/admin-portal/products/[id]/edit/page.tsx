@@ -1,21 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/Client";
 import { ArrowLeft, X, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const MAX_IMAGES = 5;
 
-export default function AddProductPage() {
+export default function EditProductPage() {
   const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
   const supabase = createClient();
+
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]); 
   const [sizes] = useState<string[]>(["S", "M", "L", "XL"]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>(["S", "M", "L", "XL"]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -24,12 +29,43 @@ export default function AddProductPage() {
     stock: "",
   });
 
-  // Image upload to "products" bucket
+  // Existing product fetch karo
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", productId)
+          .single();
+
+        if (error) throw error;
+        if (!data) throw new Error("Product not found");
+
+        setFormData({
+          title: data.title || "",
+          description: data.description || "",
+          price: data.price?.toString() || "",
+          stock: data.stock?.toString() || "",
+        });
+        setProductImages(data.images || []);
+        setSelectedSizes(data.sizes || []);
+      } catch (err: any) {
+        alert("Error loading product: " + err.message);
+        router.push("/admin-portal");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    if (productId) fetchProduct();
+  }, [productId]);
+
+  // Nai image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
 
-    // 5 image limit check
     const remaining = MAX_IMAGES - productImages.length;
     if (remaining <= 0) {
       alert(`Maximum ${MAX_IMAGES} images allowed.`);
@@ -49,7 +85,7 @@ export default function AddProductPage() {
     try {
       for (const file of filesToUpload) {
         if (!file.type.startsWith("image/")) {
-          alert(`"${file.name}" is not an image. Only images are allowed.`);
+          alert(`"${file.name}" is not an image.`);
           continue;
         }
         if (file.size > 5 * 1024 * 1024) {
@@ -66,10 +102,7 @@ export default function AddProductPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage
-          .from("products")
-          .getPublicUrl(fileName);
-
+        const { data } = supabase.storage.from("products").getPublicUrl(fileName);
         newUrls.push(data.publicUrl);
       }
 
@@ -82,19 +115,20 @@ export default function AddProductPage() {
     }
   };
 
-  // Remove uploaded image
+  // Image remove — storage se baad mein delete hogi submit par
   const removeImage = (index: number) => {
+    const url = productImages[index];
+    setRemovedImages((prev) => [...prev, url]); // track karo
     setProductImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Toggle size selection
   const toggleSize = (size: string) => {
     setSelectedSizes((prev) =>
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
   };
 
-  // Form submit
+  // Form submit — update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -122,19 +156,31 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("products").insert({
-        title: formData.title.trim(),
-        description: formData.description.trim() || null,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
-        sizes: selectedSizes,
-        images: productImages,
-        created_at: new Date().toISOString(),
-      });
+      // 1. Removed images storage se delete karo
+      if (removedImages.length > 0) {
+        const filenames = removedImages.map((url) => {
+          const parts = url.split("/");
+          return parts[parts.length - 1];
+        });
+        await supabase.storage.from("products").remove(filenames);
+      }
+
+      // 2. Database update karo
+      const { error } = await supabase
+        .from("products")
+        .update({
+          title: formData.title.trim(),
+          description: formData.description.trim() || null,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          sizes: selectedSizes,
+          images: productImages,
+        })
+        .eq("id", productId);
 
       if (error) throw error;
 
-      alert("Product added successfully!");
+      alert("Product updated successfully!");
       router.push("/admin-portal");
       router.refresh();
     } catch (err: any) {
@@ -143,6 +189,14 @@ export default function AddProductPage() {
       setLoading(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
+      </div>
+    );
+  }
 
   const imagesLeft = MAX_IMAGES - productImages.length;
 
@@ -155,7 +209,7 @@ export default function AddProductPage() {
         <ArrowLeft size={18} /> Back to Dashboard
       </Link>
 
-      <h1 className="font-display text-3xl font-bold text-primary mb-8">Add New Product</h1>
+      <h1 className="font-display text-3xl font-bold text-primary mb-8">Edit Product</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-surface p-8 border border-border">
 
@@ -278,9 +332,10 @@ export default function AddProductPage() {
             </div>
           )}
 
-          {/* Max reached message */}
           {imagesLeft === 0 && (
-            <p className="text-xs text-error mt-1">Maximum {MAX_IMAGES} images uploaded. Remove one to add another.</p>
+            <p className="text-xs text-error mt-1">
+              Maximum {MAX_IMAGES} images uploaded. Remove one to add another.
+            </p>
           )}
 
           {/* Image Previews */}
@@ -294,7 +349,6 @@ export default function AddProductPage() {
                       alt={`Product ${index + 1}`}
                       className="w-24 h-24 object-cover border border-border rounded"
                     />
-                    {/* Image number badge */}
                     <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">
                       {index + 1}
                     </span>
@@ -319,7 +373,7 @@ export default function AddProductPage() {
             disabled={loading || uploadingImages}
             className="flex-1 bg-accent hover:bg-accent-dark disabled:opacity-50 text-white py-4 text-sm font-semibold tracking-wider uppercase transition-all"
           >
-            {loading ? "Saving..." : "Save Product"}
+            {loading ? "Saving..." : "Update Product"}
           </button>
           <Link
             href="/admin-portal"

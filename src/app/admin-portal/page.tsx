@@ -13,19 +13,19 @@ export default function AdminPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [supabaseReady, setSupabaseReady] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
 
-  // Check if Supabase env vars are available
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!url || !key) {
       setError("Supabase configuration missing. Please add environment variables.");
       setLoading(false);
       return;
     }
-    
+
     setSupabaseReady(true);
   }, []);
 
@@ -39,22 +39,22 @@ export default function AdminPortalPage() {
 
   const fetchData = async () => {
     if (!supabase) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       if (ordersError) throw ordersError;
-      
+
       const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (productsError) throw productsError;
 
@@ -71,18 +71,18 @@ export default function AdminPortalPage() {
     if (supabase) {
       await supabase.auth.signOut();
     }
-    router.push('/');
+    router.push("/");
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     if (!supabase) return;
-    
+
     try {
       const { error } = await supabase
-        .from('orders')
+        .from("orders")
         .update({ order_status: newStatus })
-        .eq('id', orderId);
-        
+        .eq("id", orderId);
+
       if (error) throw error;
       fetchData();
     } catch (err: any) {
@@ -92,19 +92,35 @@ export default function AdminPortalPage() {
 
   const deleteProduct = async (productId: string) => {
     if (!supabase) return;
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    
+    if (!confirm("Are you sure you want to delete this product? This cannot be undone.")) return;
+
+    setDeletingId(productId);
+
     try {
-      const { error } = await supabase.from('products').delete().eq('id', productId);
+      // Storage se images bhi delete karo
+      const product = products.find((p) => p.id === productId);
+      if (product?.images?.length) {
+        const filenames = product.images.map((url: string) => {
+          const parts = url.split("/");
+          return parts[parts.length - 1];
+        });
+
+        await supabase.storage.from("products").remove(filenames);
+      }
+
+      const { error } = await supabase.from("products").delete().eq("id", productId);
       if (error) throw error;
-      fetchData();
+
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
     } catch (err: any) {
       alert("Error deleting product: " + err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const totalRevenue = orders.reduce((acc, order) => acc + Number(order.total_amount), 0);
-  const pendingOrders = orders.filter(o => o.order_status === 'pending').length;
+  const pendingOrders = orders.filter((o) => o.order_status === "pending").length;
 
   const stats = [
     { label: "Total Orders", value: orders.length.toString(), icon: ShoppingCart, change: `+${pendingOrders} pending` },
@@ -113,7 +129,6 @@ export default function AdminPortalPage() {
     { label: "Customers", value: "1,204", icon: Users, change: "Registered" },
   ];
 
-  // Show error state if Supabase not configured
   if (error && !supabaseReady) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-bg">
@@ -132,8 +147,8 @@ export default function AdminPortalPage() {
               NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
             </code>
           </div>
-          <button 
-            onClick={() => router.push('/')}
+          <button
+            onClick={() => router.push("/")}
             className="mt-6 px-6 py-3 bg-accent text-white text-sm font-semibold tracking-wider uppercase hover:bg-accent-dark transition-all"
           >
             Go Home
@@ -159,13 +174,13 @@ export default function AdminPortalPage() {
           <p className="text-muted text-sm mt-1">Welcome back, Admin</p>
         </div>
         <div className="flex gap-3">
-          <button 
-            onClick={() => router.push('/admin-portal/products/new')}
+          <button
+            onClick={() => router.push("/admin-portal/products/new")}
             className="flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-6 py-3 text-sm font-semibold transition-all"
           >
             <Plus size={16} /> Add Product
           </button>
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 border border-border hover:border-error text-muted hover:text-error px-4 py-3 text-sm transition-all"
           >
@@ -241,10 +256,13 @@ export default function AdminPortalPage() {
                         value={order.order_status}
                         onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                         className={`text-xs font-medium uppercase tracking-wider px-3 py-1 border ${
-                          order.order_status === "delivered" ? "bg-success/10 text-success border-success/20" :
-                          order.order_status === "shipped" ? "bg-accent/10 text-accent-dark border-accent/20" :
-                          order.order_status === "cancelled" ? "bg-error/10 text-error border-error/20" :
-                          "bg-primary/10 text-primary border-primary/20"
+                          order.order_status === "delivered"
+                            ? "bg-success/10 text-success border-success/20"
+                            : order.order_status === "shipped"
+                            ? "bg-accent/10 text-accent-dark border-accent/20"
+                            : order.order_status === "cancelled"
+                            ? "bg-error/10 text-error border-error/20"
+                            : "bg-primary/10 text-primary border-primary/20"
                         }`}
                       >
                         <option value="pending">Pending</option>
@@ -263,6 +281,9 @@ export default function AdminPortalPage() {
                 ))}
               </tbody>
             </table>
+            {orders.length === 0 && (
+              <div className="text-center py-12 text-muted text-sm">No orders yet.</div>
+            )}
           </div>
         </div>
       )}
@@ -286,10 +307,10 @@ export default function AdminPortalPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-bg/50 transition-colors">
+                  <tr key={product.id} className={`hover:bg-bg/50 transition-colors ${deletingId === product.id ? "opacity-40 pointer-events-none" : ""}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-bg border border-border overflow-hidden">
+                        <div className="w-10 h-10 bg-bg border border-border overflow-hidden flex-shrink-0">
                           {product.images?.[0] && (
                             <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
                           )}
@@ -299,19 +320,26 @@ export default function AdminPortalPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-muted">Rs. {product.price.toLocaleString()}</td>
                     <td className="px-6 py-4">
-                      <span className={`text-sm font-medium ${product.stock < 5 ? 'text-error' : 'text-success'}`}>
+                      <span className={`text-sm font-medium ${product.stock < 5 ? "text-error" : "text-success"}`}>
                         {product.stock}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-muted">{product.sizes?.join(", ")}</td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button className="p-1.5 text-muted hover:text-accent transition-colors">
+                        {/* Edit button — edit page par jaye ga */}
+                        <button
+                          onClick={() => router.push(`/admin-portal/products/${product.id}/edit`)}
+                          className="p-1.5 text-muted hover:text-accent transition-colors"
+                          title="Edit product"
+                        >
                           <Edit size={16} />
                         </button>
-                        <button 
+                        {/* Delete button */}
+                        <button
                           onClick={() => deleteProduct(product.id)}
                           className="p-1.5 text-muted hover:text-error transition-colors"
+                          title="Delete product"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -321,6 +349,9 @@ export default function AdminPortalPage() {
                 ))}
               </tbody>
             </table>
+            {products.length === 0 && (
+              <div className="text-center py-12 text-muted text-sm">No products yet.</div>
+            )}
           </div>
         </div>
       )}
