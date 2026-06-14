@@ -231,7 +231,7 @@ export default function AdminPortalPage() {
               <tbody className="divide-y divide-border">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-bg/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-primary">#{order.id.slice(0, 8)}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-primary">#{order.order_number}</td>
                     <td className="px-6 py-4 text-sm text-muted">{order.customer_name}</td>
                     <td className="px-6 py-4 text-sm text-muted">{order.phone_number}</td>
                     <td className="px-6 py-4 text-sm text-muted">{order.area}</td>

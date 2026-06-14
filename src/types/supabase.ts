@@ -12,6 +12,7 @@ export interface Product {
 export interface Order {
   id: string;
   user_id: string | null;
+  order_number: number;
   customer_name: string;
   phone_number: string;
   delivery_address: string;
