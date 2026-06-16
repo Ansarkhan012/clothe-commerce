@@ -3,6 +3,9 @@ export interface Product {
   title: string;
   description: string | null;
   price: number;
+  sale_price: number | null;
+  category: string;
+  featured: boolean;
   images: string[];
   sizes: string[];
   stock: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/src/store/useCartStore";
 import { ShoppingBag, Menu, X, Search, User, Truck } from "lucide-react";
 
@@ -9,6 +9,9 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const cart = useCartStore((state) => state.cart);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+
+
 
   const navLinks = [
     { href: "/new-arrivals", label: "New Arrivals" },
@@ -19,9 +22,9 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
-      
-      {/* 1. PREMIUM GOLD & BLACK TOP ANNOUNCEMENT BAR */}
+    <header  className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300 ${
+    ">
+     
       <div className="bg-neutral-950 text-white text-[10px] tracking-[0.25em] text-center py-2.5 px-4 uppercase font-medium border-b border-neutral-900">
         Free Delivery Across Pakistan On Orders Above <span className="text-amber-400 font-semibold">Rs. 5,000</span>
       </div>
