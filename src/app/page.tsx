@@ -287,7 +287,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </Link>
           </div>
 
-          {saleProducts && saleProducts.length > 0 ? (
+          {/* {saleProducts && saleProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 lg:gap-x-8">
               {saleProducts.map((product: Product) => (
                 <ProductCard key={product.id} product={product} showSaleBadge />
@@ -298,7 +298,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <Tag className="w-8 h-8 mx-auto mb-3 text-gray-600" strokeWidth={1.5} />
               <p className="text-xs tracking-wider text-gray-500 uppercase">No active sale items at the moment. Check back soon!</p>
             </div>
-          )}
+          )} */}
 
           <div className="mt-12 text-center sm:hidden">
             <Link
@@ -381,14 +381,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 >
                   Price ↑
                 </Link>
-                <Link 
+                {/* <Link 
                   href={`?${searchParams?.category ? `category=${search.params.category}&` : ''}sort=price_desc`}
                   className={`px-3 py-1.5 text-[11px] tracking-wider uppercase font-medium rounded-md transition-all ${
                     searchParams?.sort === 'price_desc' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   Price ↓
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
