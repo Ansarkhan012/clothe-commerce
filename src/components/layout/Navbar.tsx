@@ -20,7 +20,7 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+    <header className="sticky -top-12 md:-top-9 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
 
       {/* Announcement Bar */}
       <div className="bg-neutral-950 text-white text-[10px] tracking-[0.22em] text-center py-2.5 px-4 uppercase">
@@ -49,13 +49,13 @@ export function Navbar() {
             className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 shrink-0"
           >
             <Image
-              src="/images/logo.png"
-              alt="Zaisha's Fabrics"
-              width={140}
-              height={52}
-              className="h-10 sm:h-12 w-auto object-contain"
-              priority
-            />
+  src="/images/logo.png"
+  alt="Zaisha's Fabrics"
+  width={220}
+  height={220}
+  className="h-20 sm:h-16 lg:h-20 w-auto object-contain"
+  priority
+/>
           </Link>
 
           {/* Desktop Nav Links */}
