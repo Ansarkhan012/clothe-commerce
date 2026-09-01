@@ -16,13 +16,18 @@ export interface Order {
   id: string;
   user_id: string | null;
   order_number: number;
+  public_order_id: string;
   customer_name: string;
+  email: string | null;
   phone_number: string;
   delivery_address: string;
   area: string;
+  city: string | null;
+  province: string | null;
   total_amount: number;
   payment_method: string;
-  order_status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  payment_status: 'pending' | 'unpaid' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
+  order_status: 'pending' | 'confirmed' | 'processing' | 'packed' | 'ready_to_ship' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancel_requested' | 'cancelled' | 'return_requested' | 'returned' | 'refund_pending' | 'refunded' | 'failed';
   items: OrderItem[];
   created_at: string;
 }

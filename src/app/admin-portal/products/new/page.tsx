@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/Client";
 import { ArrowLeft, X, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const MAX_IMAGES = 5;
 
 export default function AddProductPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [productImages, setProductImages] = useState<string[]>([]);
@@ -74,8 +75,8 @@ export default function AddProductPage() {
       }
 
       setProductImages((prev) => [...prev, ...newUrls]);
-    } catch (err: any) {
-      alert("Upload failed: " + err.message);
+    } catch (err: unknown) {
+      alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setUploadingImages(false);
       e.target.value = "";
@@ -137,8 +138,8 @@ export default function AddProductPage() {
       alert("Product added successfully!");
       router.push("/admin-portal");
       router.refresh();
-    } catch (err: any) {
-      alert("Error: " + err.message);
+    } catch (err: unknown) {
+      alert("Error: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -289,9 +290,11 @@ export default function AddProductPage() {
               <div className="flex flex-wrap gap-3">
                 {productImages.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img
+                    <Image
                       src={url}
                       alt={`Product ${index + 1}`}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover border border-border rounded"
                     />
                     {/* Image number badge */}

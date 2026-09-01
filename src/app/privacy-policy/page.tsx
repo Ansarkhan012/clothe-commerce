@@ -5,7 +5,7 @@ export default function PrivacyPolicyPage() {
 
       <div className="space-y-6 text-neutral-700 leading-7">
         <p>
-          At Zaisha&apos;s Fabrics, we respect your privacy and are committed to
+          At QurZaib Fabrics, we respect your privacy and are committed to
           protecting your personal information.
         </p>
 

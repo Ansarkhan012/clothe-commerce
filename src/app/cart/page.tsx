@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { businessConfig, calculateDisplayedDelivery } from "@/src/config/business";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
@@ -14,7 +15,7 @@ export default function CartPage() {
   const router = useRouter();
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = subtotal > 5000 ? 0 : 250;
+  const shipping = calculateDisplayedDelivery(subtotal);
   const total = subtotal + shipping;
 
   const handleCheckout = async () => {
@@ -66,7 +67,7 @@ export default function CartPage() {
                   fill
                   className="object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                    (e.target as HTMLImageElement).src = '/images/home/hero-model.png';
                   }}
                 />
               </div>
@@ -89,7 +90,9 @@ export default function CartPage() {
                     <span className="px-4 text-sm font-medium">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                      disabled={item.stock !== undefined && item.quantity >= item.stock}
                       className="p-2 hover:bg-bg transition-colors"
+                      aria-label={`Increase ${item.title} quantity`}
                     >
                       <Plus size={14} />
                     </button>
@@ -98,6 +101,7 @@ export default function CartPage() {
                   <button
                     onClick={() => removeFromCart(item.id, item.size)}
                     className="text-muted hover:text-error transition-colors p-2"
+                    aria-label={`Remove ${item.title} from cart`}
                   >
                     <Trash2 size={18} />
                   </button>
@@ -129,7 +133,7 @@ export default function CartPage() {
                 <span>{shipping === 0 ? "Free" : `Rs. ${shipping}`}</span>
               </div>
               {shipping > 0 && (
-                <p className="text-xs text-accent">Add Rs. {5000 - subtotal} more for free shipping!</p>
+                <p className="text-xs text-accent">Add Rs. {businessConfig.freeShippingThreshold - subtotal} more for free shipping!</p>
               )}
               <div className="border-t border-border pt-3 flex justify-between font-bold text-primary text-base">
                 <span>Total</span>
@@ -140,7 +144,7 @@ export default function CartPage() {
             <button
               onClick={handleCheckout}
               disabled={checkoutLoading}
-              className="w-full mt-6 bg-accent hover:bg-accent-dark disabled:opacity-50 text-white py-4 text-sm font-semibold tracking-wider uppercase transition-all duration-300"
+              className="w-full mt-6 bg-brand-green-dark hover:bg-brand-green disabled:opacity-50 text-white py-4 text-sm font-semibold tracking-wider uppercase transition-all duration-300"
             >
               {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
             </button>

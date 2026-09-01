@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/Client";
 import { ArrowLeft, X, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const MAX_IMAGES = 5;
 
@@ -12,7 +13,7 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -50,8 +51,8 @@ export default function EditProductPage() {
         });
         setProductImages(data.images || []);
         setSelectedSizes(data.sizes || []);
-      } catch (err: any) {
-        alert("Error loading product: " + err.message);
+      } catch (err: unknown) {
+        alert("Error loading product: " + (err instanceof Error ? err.message : "Unknown error"));
         router.push("/admin-portal");
       } finally {
         setFetching(false);
@@ -59,7 +60,7 @@ export default function EditProductPage() {
     };
 
     if (productId) fetchProduct();
-  }, [productId]);
+  }, [productId, router, supabase]);
 
   // Nai image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,8 +108,8 @@ export default function EditProductPage() {
       }
 
       setProductImages((prev) => [...prev, ...newUrls]);
-    } catch (err: any) {
-      alert("Upload failed: " + err.message);
+    } catch (err: unknown) {
+      alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setUploadingImages(false);
       e.target.value = "";
@@ -183,8 +184,8 @@ export default function EditProductPage() {
       alert("Product updated successfully!");
       router.push("/admin-portal");
       router.refresh();
-    } catch (err: any) {
-      alert("Error: " + err.message);
+    } catch (err: unknown) {
+      alert("Error: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -344,9 +345,11 @@ export default function EditProductPage() {
               <div className="flex flex-wrap gap-3">
                 {productImages.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img
+                    <Image
                       src={url}
                       alt={`Product ${index + 1}`}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover border border-border rounded"
                     />
                     <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">

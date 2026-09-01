@@ -1,309 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { useCartStore } from "@/src/store/useCartStore";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Send, AlertCircle, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { useRef, useState } from "react";
+import { AlertCircle, CheckCircle, LockKeyhole } from "lucide-react";
+import { calculateDisplayedDelivery, pakistanProvinces } from "@/src/config/business";
+import { useCartStore } from "@/src/store/useCartStore";
 
-const areas = [
-  "Karachi - Clifton",
-  "Karachi - DHA",
-  "Karachi - Gulshan",
-  "Karachi - North Nazimabad",
-  "Karachi - Saddar",
-  "Karachi - Korangi",
-  "Karachi - Malir",
-  "Lahore - Gulberg",
-  "Lahore - DHA",
-  "Lahore - Model Town",
-  "Islamabad - F-7",
-  "Islamabad - G-10",
-  "Rawalpindi - Saddar",
-  "Faisalabad - Canal Road",
-  "Other",
-];
+const STORAGE_KEY = "qurzaib-checkout-idempotency";
+type FormState = { customer_name:string; email:string; phone_number:string; delivery_address:string; address_line_2:string; area:string; city:string; province:string; postal_code:string; delivery_notes:string; payment_method:"cod" };
+const initialForm: FormState = { customer_name:"",email:"",phone_number:"",delivery_address:"",address_line_2:"",area:"",city:"",province:"",postal_code:"",delivery_notes:"",payment_method:"cod" };
+
+function Field({ label, name, value, change, error, type="text", optional=false }: { label:string; name:keyof FormState; value:string; change:(name:keyof FormState,value:string)=>void; error?:string; type?:string; optional?:boolean }) {
+  return <div><label htmlFor={name} className="mb-2 block text-sm font-medium">{label}{optional ? " (optional)" : " *"}</label><input id={name} type={type} value={value} onChange={(e)=>change(name,e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? `${name}-error` : undefined} className={`w-full border bg-bg px-4 py-3 outline-none focus:border-accent ${error ? "border-error" : "border-border"}`} />{error && <p id={`${name}-error`} className="mt-1 text-xs text-error">{error}</p>}</div>;
+}
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCartStore();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [form,setForm] = useState<FormState>(initialForm);
+  const [errors,setErrors] = useState<Record<string,string>>({});
+  const [submitting,setSubmitting] = useState(false);
+  const [error,setError] = useState<string|null>(null);
+  const [confirmation,setConfirmation] = useState<{reference:string;total:number}|null>(null);
+  const keyRef = useRef("");
+  const subtotal = cart.reduce((sum,item)=>sum+item.price*item.quantity,0);
+  const delivery = calculateDisplayedDelivery(subtotal);
+  const change = (name:keyof FormState,value:string) => { setForm(current=>({...current,[name]:value})); setErrors(current=>({...current,[name]:""})); };
+  function validate() { const next:Record<string,string>={}; if(form.customer_name.trim().length<2)next.customer_name="Enter your full name."; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))next.email="Enter a valid email."; if(!/^03\d{9}$/.test(form.phone_number.replace(/\D/g,"")))next.phone_number="Use 03XXXXXXXXX."; if(form.delivery_address.trim().length<10)next.delivery_address="Enter a complete address."; if(form.area.trim().length<2)next.area="Enter your area."; if(form.city.trim().length<2)next.city="Enter your city."; if(!form.province)next.province="Select a province."; setErrors(next); return !Object.keys(next).length; }
+  async function submit(event:React.FormEvent){ event.preventDefault(); setError(null); if(!validate()||!cart.length)return; setSubmitting(true); try { const items=cart.map(({id,size,quantity})=>({product_id:id,size,quantity})); const fingerprint=JSON.stringify(items); if(!keyRef.current){ try { const saved=JSON.parse(sessionStorage.getItem(STORAGE_KEY)||"null") as {fingerprint?:string;key?:string}|null; keyRef.current=saved?.fingerprint===fingerprint&&saved.key?saved.key:crypto.randomUUID(); } catch { keyRef.current=crypto.randomUUID(); } sessionStorage.setItem(STORAGE_KEY,JSON.stringify({fingerprint,key:keyRef.current})); } const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,phone_number:form.phone_number.replace(/\D/g,""),idempotency_key:keyRef.current,items})}); const result=await response.json() as {message?:string;orderReference?:string;total?:number}; if(!response.ok||!result.orderReference)throw new Error(result.message||"Unable to place order"); setConfirmation({reference:result.orderReference,total:Number(result.total)}); clearCart(); sessionStorage.removeItem(STORAGE_KEY); keyRef.current=""; } catch(caught){setError(caught instanceof Error?caught.message:"Unable to place order");} finally{setSubmitting(false);} }
 
-  const [formData, setFormData] = useState({
-    customer_name: "",
-    phone_number: "",
-    delivery_address: "",
-    area: "",
-  });
+  if(confirmation)return <main className="mx-auto max-w-xl px-5 py-20 text-center"><CheckCircle className="mx-auto mb-5 text-brand-green" size={64}/><p className="text-xs uppercase tracking-[.22em] text-brand-gold-dark">Order confirmed</p><h1 className="mt-3 font-display text-4xl">Thank You for Your Order</h1><div className="my-8 border border-border bg-surface p-6 text-left"><p className="text-xs uppercase text-muted">Order reference</p><p className="mt-1 font-mono text-2xl font-bold text-brand-green">{confirmation.reference}</p><div className="mt-5 grid grid-cols-2 gap-4 text-sm"><div><p className="text-muted">Payment</p><p>Cash on Delivery</p></div><div><p className="text-muted">Total</p><p>PKR {confirmation.total.toLocaleString()}</p></div><div><p className="text-muted">Status</p><p>Pending confirmation</p></div></div></div><p className="mb-7 text-sm text-muted">Save this reference and use it with your phone number for tracking. No confirmation email is claimed until email delivery is configured.</p><div className="flex flex-col justify-center gap-3 sm:flex-row"><Link href="/" className="bg-brand-green px-6 py-3 text-white">Continue Shopping</Link><Link href={`/track-order?reference=${confirmation.reference}`} className="border border-brand-green px-6 py-3 text-brand-green">Track Order</Link></div></main>;
+  if(!cart.length)return <main className="mx-auto max-w-xl px-5 py-24 text-center"><h1 className="font-display text-4xl">Your cart is empty</h1><p className="mt-3 text-muted">Add an item before starting checkout.</p><Link href="/collections" className="mt-7 inline-block bg-brand-green px-6 py-3 text-white">Browse Collections</Link></main>;
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = subtotal > 5000 ? 0 : 250;
-  const total = subtotal + shipping;
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.customer_name.trim() || formData.customer_name.trim().length < 2) {
-      errors.customer_name = "Name must be at least 2 characters";
-    }
-
-    const phoneRegex = /^03[0-9]{9}$/;
-    if (!phoneRegex.test(formData.phone_number.trim())) {
-      errors.phone_number = "Invalid format. Use: 03XXXXXXXXX (11 digits)";
-    }
-
-    if (!formData.area) {
-      errors.area = "Please select an area";
-    }
-
-    if (!formData.delivery_address.trim() || formData.delivery_address.trim().length < 10) {
-      errors.delivery_address = "Please enter complete address (min 10 chars)";
-    }
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!validateForm()) {
-      return;
-    }
-
-    if (cart.length === 0) {
-      setError("Your cart is empty!");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const items = cart.map((item) => ({
-        product_id: item.id,
-        size: item.size,
-        quantity: item.quantity,
-        price_at_time: item.price,
-      }));
-
-      const payload = {
-        customer_name: formData.customer_name.trim(),
-        phone_number: formData.phone_number.trim(),
-        delivery_address: formData.delivery_address.trim(),
-        area: formData.area,
-        items: items,
-      };
-
-      console.log("📤 Sending:", payload);
-
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      console.log("📥 Response:", data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to place order");
-      }
-
-      setOrderId(data.orderId);
-      setSuccess(true);
-      clearCart();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (cart.length === 0 && !success) {
-    router.push("/cart");
-    return null;
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <CheckCircle className="mx-auto text-success mb-4" size={64} />
-          <h1 className="font-display text-3xl font-bold text-primary mb-2">Order Placed!</h1>
-          <p className="text-muted mb-4">
-            Thank you for your order. We will contact you shortly.
-          </p>
-          {orderId && <p className="text-sm text-muted mb-6">Order ID: {orderId}</p>}
-          <button
-            onClick={() => router.push("/")}
-            className="bg-accent hover:bg-accent-dark text-white px-8 py-3 text-sm font-semibold tracking-wider uppercase transition-all"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="font-display text-4xl font-bold text-primary mb-8">Checkout</h1>
-
-      {error && (
-        <div className="mb-6 p-4 bg-error/10 border border-error/20 text-error flex items-center gap-2">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Order Items */}
-        <div>
-          <h2 className="font-display text-xl font-bold text-primary mb-6">Order Items ({cart.length})</h2>
-          <div className="space-y-4">
-            {cart.map((item) => (
-              <div key={`${item.id}-${item.size}`} className="flex gap-4 bg-surface p-4 border border-border">
-                <div className="relative w-20 h-24 shrink-0 bg-muted/10 overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-primary">{item.title}</h3>
-                  <p className="text-sm text-muted">Size: {item.size} | Qty: {item.quantity}</p>
-                  <p className="text-accent font-bold">Rs. {(item.price * item.quantity).toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 p-4 bg-bg border border-border">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted">Subtotal</span>
-              <span className="text-primary">Rs. {subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted">Shipping</span>
-              <span className="text-primary">{shipping === 0 ? "Free" : `Rs. ${shipping}`}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
-              <span className="text-primary">Total</span>
-              <span className="text-accent">Rs. {total.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Checkout Form */}
-        <div>
-          <h2 className="font-display text-xl font-bold text-primary mb-6">Delivery Details</h2>
-          <form onSubmit={handleSubmit} className="space-y-6 bg-surface p-6 border border-border">
-            
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Full Name *</label>
-              <input
-                type="text"
-                value={formData.customer_name}
-                onChange={(e) => {
-                  setFormData({ ...formData, customer_name: e.target.value });
-                  if (fieldErrors.customer_name) setFieldErrors({...fieldErrors, customer_name: ""});
-                }}
-                className={`w-full px-4 py-3 bg-bg border transition-colors focus:outline-none ${
-                  fieldErrors.customer_name ? "border-error" : "border-border focus:border-accent"
-                }`}
-                placeholder="Enter your full name"
-              />
-              {fieldErrors.customer_name && (
-                <p className="text-error text-xs mt-1">{fieldErrors.customer_name}</p>
-              )}
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Phone Number *</label>
-              <input
-                type="tel"
-                value={formData.phone_number}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 11);
-                  setFormData({ ...formData, phone_number: value });
-                  if (fieldErrors.phone_number) setFieldErrors({...fieldErrors, phone_number: ""});
-                }}
-                className={`w-full px-4 py-3 bg-bg border transition-colors focus:outline-none ${
-                  fieldErrors.phone_number ? "border-error" : "border-border focus:border-accent"
-                }`}
-                placeholder="03XXXXXXXXX"
-              />
-              {fieldErrors.phone_number && (
-                <p className="text-error text-xs mt-1">{fieldErrors.phone_number}</p>
-              )}
-              <p className="text-xs text-muted mt-1">Format: 03XXXXXXXXX (11 digits)</p>
-            </div>
-
-            {/* Area */}
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Area *</label>
-              <select
-                value={formData.area}
-                onChange={(e) => {
-                  setFormData({ ...formData, area: e.target.value });
-                  if (fieldErrors.area) setFieldErrors({...fieldErrors, area: ""});
-                }}
-                className={`w-full px-4 py-3 bg-bg border transition-colors focus:outline-none ${
-                  fieldErrors.area ? "border-error" : "border-border focus:border-accent"
-                }`}
-              >
-                <option value="">Select your area</option>
-                {areas.map((area) => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </select>
-              {fieldErrors.area && (
-                <p className="text-error text-xs mt-1">{fieldErrors.area}</p>
-              )}
-            </div>
-
-            {/* Delivery Address */}
-            <div>
-              <label className="block text-sm font-medium text-primary mb-2">Delivery Address *</label>
-              <textarea
-                rows={3}
-                value={formData.delivery_address}
-                onChange={(e) => {
-                  setFormData({ ...formData, delivery_address: e.target.value });
-                  if (fieldErrors.delivery_address) setFieldErrors({...fieldErrors, delivery_address: ""});
-                }}
-                className={`w-full px-4 py-3 bg-bg border transition-colors focus:outline-none resize-none ${
-                  fieldErrors.delivery_address ? "border-error" : "border-border focus:border-accent"
-                }`}
-                placeholder="House #, Street, Landmark, etc."
-              />
-              {fieldErrors.delivery_address && (
-                <p className="text-error text-xs mt-1">{fieldErrors.delivery_address}</p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent-dark disabled:opacity-50 text-white py-4 text-sm font-semibold tracking-wider uppercase transition-all"
-            >
-              {loading ? "Placing Order..." : "Place Order"}
-              <Send size={16} />
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
+  return <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8"><p className="text-xs uppercase tracking-[.2em] text-brand-gold-dark">Secure checkout</p><h1 className="mb-9 font-display text-4xl">Complete Your Order</h1>{error&&<div role="alert" className="mb-6 flex gap-2 border border-error/30 bg-error/10 p-4 text-error"><AlertCircle size={18}/>{error}</div>}<div className="grid gap-10 lg:grid-cols-[1.25fr_.75fr]"><form onSubmit={submit} noValidate className="space-y-8">
+    <fieldset className="grid gap-5 border border-border bg-surface p-5 sm:grid-cols-2 sm:p-7"><legend className="px-2 font-display text-xl">Customer Information</legend><Field label="Full Name" name="customer_name" value={form.customer_name} change={change} error={errors.customer_name}/><Field label="Email Address" name="email" type="email" value={form.email} change={change} error={errors.email}/><Field label="Mobile Number" name="phone_number" type="tel" value={form.phone_number} change={change} error={errors.phone_number}/></fieldset>
+    <fieldset className="grid gap-5 border border-border bg-surface p-5 sm:grid-cols-2 sm:p-7"><legend className="px-2 font-display text-xl">Delivery Address</legend><div className="sm:col-span-2"><Field label="Full Address" name="delivery_address" value={form.delivery_address} change={change} error={errors.delivery_address}/></div><div className="sm:col-span-2"><Field label="Apartment / House / Floor" name="address_line_2" value={form.address_line_2} change={change} optional/></div><Field label="Area" name="area" value={form.area} change={change} error={errors.area}/><Field label="City" name="city" value={form.city} change={change} error={errors.city}/><div><label htmlFor="province" className="mb-2 block text-sm font-medium">Province *</label><select id="province" value={form.province} onChange={(e)=>change("province",e.target.value)} className="w-full border border-border bg-bg px-4 py-3"><option value="">Select province</option>{pakistanProvinces.map(item=><option key={item}>{item}</option>)}</select>{errors.province&&<p className="mt-1 text-xs text-error">{errors.province}</p>}</div><Field label="Postal Code" name="postal_code" value={form.postal_code} change={change} optional/><div className="sm:col-span-2"><label htmlFor="delivery_notes" className="mb-2 block text-sm font-medium">Delivery Notes (optional)</label><textarea id="delivery_notes" value={form.delivery_notes} maxLength={500} rows={3} onChange={(e)=>change("delivery_notes",e.target.value)} className="w-full border border-border bg-bg px-4 py-3"/></div></fieldset>
+    <fieldset className="border border-border bg-surface p-5 sm:p-7"><legend className="px-2 font-display text-xl">Payment Method</legend><label className="flex gap-3 border border-brand-green bg-brand-green/5 p-4"><input type="radio" checked readOnly className="accent-brand-green"/><span><strong>Cash on Delivery</strong><span className="block text-sm text-muted">Pay on arrival. Starts as unpaid.</span></span></label><div className="mt-3 grid gap-2 sm:grid-cols-3">{["Card Payment","Easypaisa","JazzCash"].map(name=><div key={name} aria-disabled="true" className="border border-border bg-bg p-3 text-sm text-muted"><span className="block font-medium">{name}</span>Coming soon</div>)}</div></fieldset><button disabled={submitting} className="flex w-full items-center justify-center gap-2 bg-brand-green py-4 font-semibold uppercase text-white disabled:opacity-50"><LockKeyhole size={17}/>{submitting?"Placing Order…":"Place COD Order"}</button></form>
+    <aside className="h-fit border border-border bg-surface p-5 lg:sticky lg:top-32"><h2 className="font-display text-2xl">Order Summary</h2><div className="mt-5 space-y-4">{cart.map(item=><div key={`${item.id}-${item.size}`} className="flex gap-3"><div className="relative h-20 w-16 shrink-0 bg-bg"><Image src={item.image} alt="" fill sizes="64px" className="object-cover"/></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.title}</p><p className="text-xs text-muted">Size {item.size} · Qty {item.quantity}</p></div><p className="text-sm">PKR {(item.price*item.quantity).toLocaleString()}</p></div>)}</div><div className="mt-6 space-y-2 border-t border-border pt-5 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>PKR {subtotal.toLocaleString()}</span></p><p className="flex justify-between"><span>Delivery</span><span>{delivery?`PKR ${delivery}`:"Free"}</span></p><p className="flex justify-between border-t border-border pt-3 text-lg font-bold"><span>Total</span><span>PKR {(subtotal+delivery).toLocaleString()}</span></p><p className="pt-2 text-xs text-muted">Display estimate only. The server recalculates price, stock and delivery.</p></div></aside></div></main>;
 }

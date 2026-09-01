@@ -5,13 +5,13 @@ export default function AboutPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center mb-16">
         <span className="text-accent font-medium tracking-wider uppercase text-sm">Our Story</span>
-        <h1 className="font-display text-5xl font-bold text-primary mt-2">About Zaisha&apos;s Fabrics</h1>
+        <h1 className="font-display text-5xl font-bold text-primary mt-2">About QurZaib Fabrics</h1>
         <div className="w-16 h-0.5 bg-accent mx-auto mt-4" />
       </div>
 
       <div className="space-y-12 text-muted leading-relaxed">
         <p className="text-lg text-center max-w-2xl mx-auto">
-          Founded in the heart of Karachi, Zari & Taanka celebrates the rich textile heritage 
+          QurZaib Fabrics celebrates the rich textile heritage
           of Pakistan. We bring you authentic, high-quality fabrics that blend traditional 
           craftsmanship with modern elegance.
         </p>

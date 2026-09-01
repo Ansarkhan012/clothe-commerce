@@ -4,153 +4,79 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/src/store/useCartStore";
-import { ShoppingBag, Menu, X, Search, User, Truck } from "lucide-react";
+import { ShoppingBag, Menu, X, Search, UserRound, Truck, CircleHelp } from "lucide-react";
+
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/new-arrivals", label: "New Arrivals" },
+  { href: "/collections", label: "Collections" },
+  { href: "/collections?category=Unstitched", label: "Unstitched" },
+  { href: "/sale", label: "Sale" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact" },
+];
+
+function BrandLockup() {
+  return (
+    <span className="flex items-center gap-2.5">
+      <Image src="/images/qurzaib-mark.png" alt="" width={64} height={64} className="h-14 w-14 object-contain sm:h-12 sm:w-12" priority />
+      <span className="hidden sm:block leading-none">
+        <span className="block font-display text-[21px] tracking-[0.13em] text-brand-green-dark">QURZAIB</span>
+        <span className="mt-1 block text-[9px] tracking-[0.35em] text-accent">FABRICS</span>
+      </span>
+      <span className="sr-only">QurZaib Fabrics</span>
+    </span>
+  );
+}
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const cart = useCartStore((state) => state.cart);
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const navLinks = [
-    { href: "/new-arrivals", label: "New Arrivals" },
-    { href: "/collections", label: "Collections" },
-    { href: "/sale", label: "Festive Sale", accent: true },
-    { href: "/about", label: "Our Story" },
-    { href: "/contact", label: "Contact" },
-  ];
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   return (
-    <header className="sticky -top-12 md:-top-9 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
-
-      {/* Announcement Bar */}
-      <div className="bg-neutral-950 text-white text-[10px] tracking-[0.22em] text-center py-2.5 px-4 uppercase">
-        Free Delivery Across Pakistan On Orders Above{" "}
-        <span className="text-amber-400 font-semibold">Rs. 5,000</span>
+    <header className="sticky top-0 z-50 border-b border-border bg-brand-cream/95 backdrop-blur-md">
+      <div className="bg-brand-green-dark text-white">
+        <div className="mx-auto flex h-8 max-w-[1440px] items-center justify-between px-4 text-[10px] tracking-wide sm:px-6 lg:px-10">
+          <span className="flex items-center gap-2"><Truck size={13} aria-hidden="true" /> Free Delivery on orders above PKR 5,000</span>
+          <div className="hidden items-center gap-4 sm:flex">
+            <Link href="/track-order" className="hover:text-brand-gold">Track Order</Link>
+            <Link href="/contact" className="flex items-center gap-1 hover:text-brand-gold"><CircleHelp size={12} /> Help</Link>
+          </div>
+        </div>
       </div>
-
-      <nav className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-
-          {/* Hamburger — mobile only, LEFT side */}
-          <button
-            type="button"
-            className="lg:hidden p-2 -ml-1 text-neutral-900 hover:text-amber-800 transition-colors shrink-0"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle Menu"
-          >
-            {mobileMenuOpen
-              ? <X size={22} strokeWidth={1.5} />
-              : <Menu size={22} strokeWidth={1.5} />}
-          </button>
-
-          {/* Logo — center on mobile, left on desktop */}
-          <Link
-            href="/"
-            className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 shrink-0"
-          >
-            <Image
-  src="/images/logo.png"
-  alt="Zaisha's Fabrics"
-  width={220}
-  height={220}
-  className="h-20 sm:h-16 lg:h-20 w-auto object-contain"
-  priority
-/>
+      <nav aria-label="Primary navigation" className="mx-auto flex h-[74px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10">
+        <button onClick={() => setOpen(true)} className="p-2 lg:hidden" aria-label="Open navigation menu" aria-expanded={open}>
+          <Menu size={23} />
+        </button>
+        <Link href="/" aria-label="QurZaib Fabrics home" className="shrink-0"><BrandLockup /></Link>
+        <div className="hidden items-center gap-6 xl:gap-8 lg:flex">
+          {navLinks.map((link) => <Link key={link.href} href={link.href} className="border-b border-transparent py-2 text-[11px] font-medium tracking-wide text-brand-charcoal transition hover:border-brand-gold-dark hover:text-brand-green">{link.label}</Link>)}
+        </div>
+        <div className="flex items-center gap-0.5 text-brand-green-dark">
+          <Link href="/collections#catalog-search" aria-label="Search products" className="hidden p-2 transition hover:text-accent sm:block"><Search size={20} /></Link>
+          <Link href="/admin-login" aria-label="Account" className="hidden p-2 transition hover:text-accent sm:block"><UserRound size={20} /></Link>
+          <Link href="/cart" aria-label={`Shopping cart with ${cartCount} items`} className="relative p-2 transition hover:text-accent">
+            <ShoppingBag size={21} />
+            {cartCount > 0 && <span className="absolute right-0 top-0 grid min-h-4 min-w-4 place-items-center rounded-full bg-brand-gold-dark px-1 text-[9px] font-bold text-white">{Math.min(cartCount, 99)}</span>}
           </Link>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center space-x-8 xl:space-x-10">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-300 relative group py-2
-                  ${link.accent
-                    ? "text-amber-700 hover:text-amber-900"
-                    : "text-neutral-800 hover:text-amber-800"
-                  }`}
-              >
-                {link.label}
-                <span className="absolute bottom-0 left-1/2 w-0 h-[1px] bg-amber-700 transition-all duration-300 group-hover:w-full group-hover:left-0" />
-              </Link>
-            ))}
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-0.5 shrink-0">
-
-            {/* Track — desktop only */}
-            <Link
-              href="/track-order"
-              className="hidden xl:flex items-center gap-1.5 px-2 py-2 text-neutral-700 hover:text-amber-800 transition-colors"
-              title="Track Your Order"
-            >
-              <Truck size={18} strokeWidth={1.5} />
-              <span className="text-[10px] tracking-widest uppercase font-medium">Track</span>
-            </Link>
-
-            {/* Search */}
-            <button
-              type="button"
-              className="p-2 text-neutral-700 hover:text-amber-800 transition-colors"
-              aria-label="Search"
-            >
-              <Search size={18} strokeWidth={1.5} />
-            </button>
-
-            {/* Account — hidden on small mobile */}
-            <Link
-              href="/admin-login"
-              className="hidden sm:flex p-2 text-neutral-700 hover:text-amber-800 transition-colors"
-              aria-label="Account"
-            >
-              <User size={18} strokeWidth={1.5} />
-            </Link>
-
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="relative p-2 text-neutral-900 hover:text-amber-800 transition-colors"
-              aria-label="Cart"
-            >
-              <ShoppingBag size={18} strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className="absolute top-1 right-1 bg-amber-800 text-white text-[9px] font-bold w-[14px] h-[14px] rounded-full flex items-center justify-center leading-none">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
-
         </div>
       </nav>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-100 bg-white shadow-lg">
-          <div className="px-6 py-6 space-y-0">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`block text-[11px] tracking-[0.18em] font-medium uppercase py-3.5 border-b border-gray-50 transition-colors
-                  ${link.accent ? "text-amber-700" : "text-neutral-900 hover:text-amber-800"}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="/track-order"
-              className="flex items-center gap-2.5 text-[10px] tracking-[0.16em] font-semibold uppercase text-amber-800 py-4"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Truck size={15} strokeWidth={1.5} />
-              Track Your Order
-            </Link>
+      {open && <div className="fixed inset-0 z-50 bg-black/35 lg:hidden" onClick={() => setOpen(false)}>
+        <div className="h-full w-[min(88vw,360px)] bg-brand-cream p-6 shadow-xl" onClick={(event) => event.stopPropagation()}>
+          <div className="mb-8 flex items-center justify-between"><BrandLockup /><button onClick={() => setOpen(false)} aria-label="Close navigation menu" className="p-2"><X /></button></div>
+          <div className="flex flex-col">
+            {navLinks.map((link) => <Link key={link.href} href={link.href} onClick={() => setOpen(false)} className="border-b border-border py-4 text-sm font-medium tracking-wide text-brand-green-dark">{link.label}</Link>)}
+            <Link href="/track-order" onClick={() => setOpen(false)} className="mt-5 flex items-center gap-2 text-sm text-accent"><Truck size={17} /> Track Order</Link>
           </div>
         </div>
-      )}
+      </div>}
     </header>
   );
 }

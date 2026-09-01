@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
           </div>
 
           <h1 className="font-display text-3xl font-bold text-primary">
-            Admin Portal
+            QurZaib Fabrics Admin
           </h1>
 
           <p className="text-muted text-sm mt-2">

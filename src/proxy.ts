@@ -37,8 +37,12 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url));
       }
 
-      const ADMIN_EMAIL = 'ansarkhan.admin@gmail.com';
-      if (user.email !== ADMIN_EMAIL) {
+      const { data: profile, error: roleError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (roleError || profile?.role !== 'admin') {
         return NextResponse.redirect(new URL('/', request.url));
       }
     }

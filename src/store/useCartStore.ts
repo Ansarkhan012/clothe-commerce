@@ -9,6 +9,7 @@ export interface CartItem {
   image: string;
   size: 'S' | 'M' | 'L' | 'XL';
   quantity: number;
+  stock?: number;
 }
 
 interface CartState {
@@ -31,7 +32,8 @@ export const useCartStore = create<CartState>()(
 
         if (existingIndex > -1) {
           const updatedCart = [...state.cart];
-          updatedCart[existingIndex].quantity += newItem.quantity;
+          const requested = updatedCart[existingIndex].quantity + newItem.quantity;
+          updatedCart[existingIndex].quantity = newItem.stock === undefined ? requested : Math.min(requested, newItem.stock);
           return { cart: updatedCart };
         }
         return { cart: [...state.cart, newItem] };
@@ -40,8 +42,8 @@ export const useCartStore = create<CartState>()(
         cart: state.cart.filter((item) => !(item.id === id && item.size === size))
       })),
       updateQuantity: (id, size, quantity) => set((state) => ({
-        cart: state.cart.map((item) => 
-          item.id === id && item.size === size ? { ...item, quantity } : item
+        cart: state.cart.map((item) =>
+          item.id === id && item.size === size ? { ...item, quantity: Math.max(1, Math.min(quantity, item.stock ?? 20)) } : item
         )
       })),
       clearCart: () => set({ cart: [] }),

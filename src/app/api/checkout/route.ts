@@ -1,105 +1,57 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/src/lib/supabase/server';
-import { CheckoutSchema } from '@/src/lib/validations/order';
+import { CheckoutSchema, normalizeCheckoutItems } from "@/src/lib/validations/order";
+import { createServiceClient } from "@/src/lib/supabase/service";
+import { consumeRateLimit, getRequestIp } from "@/src/lib/security/rate-limit";
+
+const MAX_BODY_BYTES = 32_768;
 
 export async function POST(request: Request) {
+  if (Number(request.headers.get("content-length") || "0") > MAX_BODY_BYTES) {
+    return Response.json({ message: "Invalid checkout request" }, { status: 413 });
+  }
+  if (!consumeRateLimit(`checkout:${getRequestIp(request)}`, 10, 10 * 60_000)) {
+    return Response.json({ message: "Too many requests" }, { status: 429 });
+  }
   try {
-    const body = await request.json();
-    console.log("📥 Received:", JSON.stringify(body, null, 2));
-
-    const formValidation = CheckoutSchema.safeParse(body);
-    if (!formValidation.success) {
-      const errors = formValidation.error.issues
-  .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-  .join(', ');;
-      return NextResponse.json({ 
-        success: false, 
-        message: `Validation failed: ${errors}` 
-      }, { status: 400 });
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
+      return Response.json({ message: "Invalid checkout request" }, { status: 413 });
     }
+    const parsed = CheckoutSchema.safeParse(JSON.parse(rawBody));
+    if (!parsed.success) return Response.json({ message: "Invalid checkout request" }, { status: 400 });
+    let items;
+    try { items = normalizeCheckoutItems(parsed.data.items); }
+    catch { return Response.json({ message: "Invalid checkout request" }, { status: 400 }); }
 
-    const { customer_name, phone_number, area, delivery_address } = formValidation.data;
-    const incomingItems = body.items;
-
-    if (!incomingItems || incomingItems.length === 0) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Cart is empty" 
-      }, { status: 400 });
-    }
-
-    const supabase = await createClient();
-
-    const productIds = incomingItems.map((item: any) => item.product_id);
-    const { data: databaseProducts, error: fetchError } = await supabase
-      .from('products')
-      .select('id, price, stock, title')
-      .in('id', productIds);
-
-    if (fetchError || !databaseProducts) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Database error" 
-      }, { status: 500 });
-    }
-
-    let calculatedTotalBill = 0;
-    for (const item of incomingItems) {
-      const liveProduct = databaseProducts.find(p => p.id === item.product_id);
-      if (!liveProduct) {
-        return NextResponse.json({ 
-          success: false, 
-          message: `Product not found` 
-        }, { status: 400 });
-      }
-      if (liveProduct.stock < item.quantity) {
-        return NextResponse.json({ 
-          success: false, 
-          message: `Out of stock: ${liveProduct.title}` 
-        }, { status: 400 });
-      }
-      calculatedTotalBill += Number(liveProduct.price) * item.quantity;
-    }
-
-    const deliveryCharges = calculatedTotalBill > 5000 ? 0 : 250;
-    const finalBill = calculatedTotalBill + deliveryCharges;
-
-    const { data: orderData, error: insertError } = await supabase
-      .from('orders')
-      .insert({
-        customer_name,
-        phone_number,
-        delivery_address,
-        area,
-        total_amount: finalBill,
-        payment_method: 'COD',
-        order_status: 'pending',
-        items: incomingItems,
-      })
-      .select('id')
-      .single();
-
-    if (insertError) throw insertError;
-
-    for (const item of incomingItems) {
-      const liveProduct = databaseProducts.find(p => p.id === item.product_id);
-      await supabase
-        .from('products')
-        .update({ stock: (liveProduct?.stock ?? 0) - item.quantity })
-        .eq('id', item.product_id);
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      orderId: orderData?.id,
-      total: finalBill,
+    const { data, error } = await createServiceClient().rpc("create_atomic_order", {
+      p_customer_name: parsed.data.customer_name,
+      p_email: parsed.data.email,
+      p_phone_number: parsed.data.phone_number,
+      p_delivery_address: parsed.data.delivery_address,
+      p_address_line_2: parsed.data.address_line_2,
+      p_area: parsed.data.area,
+      p_city: parsed.data.city,
+      p_province: parsed.data.province,
+      p_postal_code: parsed.data.postal_code,
+      p_delivery_notes: parsed.data.delivery_notes,
+      p_payment_method: parsed.data.payment_method,
+      p_idempotency_key: parsed.data.idempotency_key,
+      p_items: items,
     });
-
-  } catch (error: any) {
-    console.error('❌ Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message || "Server error" 
-    }, { status: 500 });
+    if (error || !data?.[0]) {
+      const message = error?.message?.includes("OUT_OF_STOCK")
+        ? "One or more items are out of stock"
+        : error?.message?.includes("INVALID_PRODUCT") || error?.message?.includes("INVALID_VARIANT")
+          ? "One or more items are unavailable" : "Unable to place order";
+      return Response.json({ message }, { status: 400 });
+    }
+    return Response.json({ success: true,
+      orderReference: data[0].public_order_id,
+      total: data[0].total_amount,
+      deliveryCharges: data[0].delivery_charges,
+      paymentStatus: data[0].payment_status,
+      orderStatus: data[0].order_status,
+    });
+  } catch {
+    return Response.json({ message: "Invalid checkout request" }, { status: 400 });
   }
 }

@@ -1,7 +1,6 @@
 import { ProductCard } from "@/src/components/common/ProductCard";
 import { NewArrivalHero } from "@/src/components/new-arrivals/NewArrivalHero";
-import { FilterBar } from "@/src/components/new-arrivals/FilterBar";
-import { createClient } from "@/src/lib/supabase/Client";
+import { createClient } from "@/src/lib/supabase/server";
 import { Product } from "@/src/types/supabase";
 
 export default async function NewArrivalsPage() {
@@ -17,11 +16,9 @@ export default async function NewArrivalsPage() {
     <div>
       <NewArrivalHero />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <FilterBar />
-        
+      <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-14 bg-brand-cream">
         {newProducts && newProducts.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-9 sm:gap-x-6">
             {newProducts.map((product: Product) => (
               <ProductCard key={product.id} product={product} />
             ))}

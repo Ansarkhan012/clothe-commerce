@@ -32,7 +32,7 @@ export default function TermsAndConditionsPage() {
           <h2 className="text-xl font-semibold mb-2">Intellectual Property</h2>
           <p>
             All website content including images, logos, and designs are the
-            property of Zaisha&apos;s Fabrics.
+            property of QurZaib Fabrics.
           </p>
         </section>
 

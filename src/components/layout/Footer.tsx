@@ -1,119 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
+import CookiePreferencesLink from "@/src/components/common/CookiePreferencesLink";
 
-function Footer() {
-  return (
-    <footer className="border-t border-neutral-200 bg-white mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <Link
-              href="/"
-              className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 shrink-0"
-            >
-              <Image
-                src="/images/logo.png"
-                alt="Zaisha's Fabrics"
-                width={220}
-                height={220}
-                className="h-20 sm:h-16 lg:h-20 w-auto object-contain"
-                priority
-              />
-            </Link>
+const groups = [
+  { title: "Shop", links: [["New Arrivals", "/new-arrivals"], ["Collections", "/collections"], ["Sale", "/sale"]] },
+  { title: "Customer Care", links: [["Help Center", "/help-center"], ["Support", "/support"], ["Track Order", "/track-order"], ["Shipping Policy", "/shipping-policy"], ["Return / Exchange", "/return-exchange-policy"], ["Refund Policy", "/refund-policy"], ["Cancellation Policy", "/cancellation-policy"]] },
+  { title: "Legal", links: [["Privacy", "/privacy-policy"], ["Terms", "/terms-and-conditions"], ["Cookies", "/cookies-policy"], ["Disclaimer", "/disclaimer"], ["Accessibility", "/accessibility"]] },
+  { title: "Security & Governance", links: [["Security Policy", "/security-policy"], ["Responsible Disclosure", "/responsible-disclosure"], ["Data Processing", "/data-processing-agreement"], ["Acceptable Use", "/acceptable-use-policy"], ["Community Guidelines", "/community-guidelines"]] },
+];
 
-            <p className="mt-4 text-sm leading-7 text-neutral-600 max-w-md">
-              Premium Pakistani fabrics crafted with elegance, tradition,
-              and modern style. Discover timeless collections designed for
-              every season.
-            </p>
-          </div>
-
-          {/* Shop */}
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-neutral-900 mb-4">
-              Shop
-            </h4>
-
-            <ul className="space-y-3 text-sm text-neutral-600">
-              <li>
-                <Link href="/new-arrivals" className="hover:text-black transition-colors">
-                  New Arrivals
-                </Link>
-              </li>
-
-              <li>
-                <Link href="/collections" className="hover:text-black transition-colors">
-                  Collections
-                </Link>
-              </li>
-
-              <li>
-                <Link href="/sale" className="hover:text-black transition-colors">
-                  Sale
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wider text-neutral-900 mb-4">
-              Support
-            </h4>
-
-            <ul className="space-y-3 text-sm text-neutral-600">
-              <li>
-                <Link href="/about" className="hover:text-black transition-colors">
-                  About Us
-                </Link>
-              </li>
-
-              <li>
-                <Link href="/contact" className="hover:text-black transition-colors">
-                  Contact Us
-                </Link>
-              </li>
-
-              <li>
-                <Link href="/track-order" className="hover:text-black transition-colors">
-                  Track Order
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-        </div>
-
-        {/* Bottom */}
-        <div className="border-t border-neutral-200 mt-12 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-neutral-500 text-center md:text-left">
-            © 2026 Zari & Taanka. All rights reserved.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs text-neutral-500">
-            <Link href="/privacy-policy" className="hover:text-black transition-colors">
-              Privacy Policy
-            </Link>
-
-            <Link href="/terms-and-conditions" className="hover:text-black transition-colors">
-              Terms & Conditions
-            </Link>
-
-            <Link href="/shipping-policy" className="hover:text-black transition-colors">
-              Shipping Policy
-            </Link>
-
-            <Link href="/return-refund-policy" className="hover:text-black transition-colors">
-              Return & Refund Policy
-            </Link>
-          </div>
-        </div>
-
+export default function Footer() {
+  return <footer className="mt-20 bg-brand-green-dark text-white">
+    <div className="brand-pattern mx-auto grid max-w-[1440px] gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[1.3fr_2fr] lg:px-12">
+      <div>
+        <Link href="/" className="inline-flex items-center gap-4">
+          <Image src="/images/qurzaib-mark.png" alt="QurZaib Fabrics emblem" width={76} height={76} className="h-16 w-16 object-contain" />
+          <span><span className="block font-display text-3xl tracking-[0.12em]">QURZAIB</span><span className="block text-[10px] tracking-[0.42em] text-brand-gold">FABRICS</span></span>
+        </Link>
+        <p className="mt-5 font-display text-xl text-brand-gold">Elegance Woven With Faith</p>
+        <p className="mt-3 max-w-sm text-sm leading-7 text-white/70">Thoughtfully curated Pakistani fabrics for timeless wardrobes and meaningful occasions.</p>
       </div>
-    </footer>
-  );
+      <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {groups.map((group) => <div key={group.title}><h2 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-gold">{group.title}</h2><ul className="space-y-3 text-sm text-white/70">{group.links.map(([label, href]) => <li key={href}><Link href={href} className="transition hover:text-white">{label}</Link></li>)}</ul></div>)}
+      </div>
+    </div>
+    <div className="flex flex-col items-center justify-center gap-2 border-t border-white/10 px-5 py-5 text-center text-xs text-white/55 sm:flex-row sm:gap-5"><span>© 2026 QurZaib Fabrics. All rights reserved.</span><CookiePreferencesLink /></div>
+  </footer>;
 }
-
-export default Footer;
