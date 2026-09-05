@@ -24,7 +24,7 @@ export function getRequestIp(request: Request) {
     return "local-development";
   }
 
-  // Do not collapse every unidentifiable production request into one bucket.
+  // Do not collapse every unidentifiable production request  bucket.
   // This is a privacy-preserving fallback, not an authentication signal.
   const fingerprint = [
     request.headers.get("user-agent") || "no-user-agent",
