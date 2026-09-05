@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/Client";
 
@@ -37,7 +38,15 @@ export default function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin-portal");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      if (profileError || profile?.role !== "admin") {
+        await supabase.auth.signOut();
+        setError("This account is not authorized for administration");
+        return;
+      }
+
+      router.push("/admin");
       router.refresh();
     } catch {
       setError("Something went wrong");
@@ -51,9 +60,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-surface border border-border p-8 sm:p-12">
 
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-accent mb-4">
-            <Lock size={28} />
-          </div>
+          <Image src="/images/qurzaib-logo-display.png" alt="Qurzaib Fabrics" width={500} height={312} sizes="208px" priority className="mx-auto mb-4 h-auto w-52 object-contain" />
 
           <h1 className="font-display text-3xl font-bold text-primary">
             QurZaib Fabrics Admin

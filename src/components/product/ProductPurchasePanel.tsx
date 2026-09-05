@@ -1,75 +1,36 @@
 "use client";
-
-import Link from "next/link";
-import { Check, Headphones, LockKeyhole, Minus, Plus, ShoppingBag, Truck } from "lucide-react";
-import { useState } from "react";
-import { businessConfig } from "@/src/config/business";
+import { Check, Minus, Plus, ShoppingBag } from "lucide-react";
+import { useMemo, useState } from "react";
+import { activeVariants, effectiveProductPrice, hasValidSale, isValidMeasuredQuantity, productInventory } from "@/src/lib/product-commerce";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { Product } from "@/src/types/supabase";
+import { productTypeLabels } from "@/src/types/product";
+const money=(n:number)=>`PKR ${Number(n).toLocaleString("en-PK")}`;
 
-const formatPrice = (value: number) => `PKR ${Number(value).toLocaleString("en-PK")}`;
-
-export function ProductPurchasePanel({ product }: { product: Product }) {
-  const sizes = product.sizes ?? [];
-  const [selectedSize, setSelectedSize] = useState(sizes[0] ?? "");
-  const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
-  const addToCart = useCartStore((state) => state.addToCart);
-  const outOfStock = product.stock <= 0;
-  const validSale = product.sale_price !== null && Number(product.sale_price) > 0 && Number(product.sale_price) < Number(product.price);
-  const currentPrice = validSale ? Number(product.sale_price) : Number(product.price);
-  const discount = validSale ? Math.round((1 - Number(product.sale_price) / Number(product.price)) * 100) : null;
-
-  function add() {
-    if (outOfStock || !selectedSize) return;
-    addToCart({ id: product.id, title: product.title, price: currentPrice,
-      image: product.images?.[0] ?? "/images/home/hero-model.png",
-      size: selectedSize as "S" | "M" | "L" | "XL", quantity, stock: product.stock });
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1600);
-  }
-
-  return <section aria-label="Product purchasing information" className="min-w-0 lg:sticky lg:top-32">
-    <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-brand-gold-dark">{product.category}</p>
-    <h1 className="mt-3 font-display text-4xl font-normal leading-[1.08] text-brand-green-dark sm:text-5xl">{product.title}</h1>
-    <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-      <strong className="text-xl font-semibold text-brand-green-dark">{formatPrice(currentPrice)}</strong>
-      {validSale && <span className="text-sm text-muted line-through">{formatPrice(Number(product.price))}</span>}
-      {discount !== null && discount > 0 && <span className="border border-brand-gold/60 bg-brand-cream px-2 py-1 text-[10px] font-semibold text-brand-gold-dark">{discount}% OFF</span>}
-    </div>
-    <div className="mt-5 border-y border-border py-4 text-sm">
-      <span className={`inline-flex items-center gap-2 font-medium ${outOfStock ? "text-error" : "text-brand-green"}`}><span className={`h-2 w-2 rounded-full ${outOfStock ? "bg-error" : "bg-brand-green"}`} />{outOfStock ? "Out of stock" : `${product.stock} available`}</span>
-    </div>
-
-    {sizes.length > 0 && <fieldset className="mt-7" disabled={outOfStock}>
-      <legend className="text-xs font-semibold uppercase tracking-[.16em]">Select Size</legend>
-      <div className="mt-3 flex flex-wrap gap-2">{sizes.map((size) => <button key={size} type="button" onClick={() => setSelectedSize(size)} aria-pressed={selectedSize === size} className={`min-h-11 min-w-11 border px-3 text-xs font-medium uppercase transition ${selectedSize === size ? "border-brand-green-dark bg-brand-green-dark text-white" : "border-border bg-white hover:border-brand-gold-dark"}`}>{size}</button>)}</div>
-    </fieldset>}
-
-    <div className="mt-7">
-      <p className="text-xs font-semibold uppercase tracking-[.16em]">Quantity</p>
-      <div className="mt-3 inline-flex min-h-11 items-center border border-border bg-white">
-        <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} disabled={quantity <= 1 || outOfStock} aria-label="Decrease quantity" className="grid min-h-11 min-w-11 place-items-center disabled:opacity-35"><Minus size={15} /></button>
-        <output aria-live="polite" className="min-w-11 text-center text-sm font-semibold">{quantity}</output>
-        <button type="button" onClick={() => setQuantity((value) => Math.min(product.stock, value + 1))} disabled={quantity >= product.stock || outOfStock} aria-label="Increase quantity" className="grid min-h-11 min-w-11 place-items-center disabled:opacity-35"><Plus size={15} /></button>
-      </div>
-    </div>
-
-    <button type="button" onClick={add} disabled={outOfStock || !selectedSize} className="mt-7 flex min-h-14 w-full items-center justify-center gap-2 border border-brand-green-dark bg-brand-green-dark px-5 text-xs font-semibold uppercase tracking-[.16em] text-white transition hover:bg-brand-green disabled:cursor-not-allowed disabled:border-border disabled:bg-brand-cream-dark disabled:text-muted">
-      {added ? <><Check size={17} /> Added to Cart</> : outOfStock ? "Out of Stock" : <><ShoppingBag size={17} /> Add to Cart</>}
-    </button>
-    <p aria-live="polite" className="mt-2 min-h-5 text-center text-xs text-brand-green">{added ? `${quantity} item${quantity > 1 ? "s" : ""} added.` : ""}</p>
-
-    <div className="mt-5 grid gap-3 border-y border-border py-5 text-xs text-brand-green-dark sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-      <span className="flex items-center gap-2"><LockKeyhole size={17} className="text-brand-gold-dark" /> Secure checkout</span>
-      <span className="flex items-center gap-2"><Truck size={17} className="text-brand-gold-dark" /> Delivery across {businessConfig.country}</span>
-      <span className="flex items-center gap-2"><Headphones size={17} className="text-brand-gold-dark" /> Customer support</span>
-    </div>
-
-    <div className="mt-3 divide-y divide-border border-b border-border">
-      {product.description && <details className="group py-4"><summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-[.14em]">Product Details <span className="float-right group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-muted">{product.description}</p></details>}
-      <details className="group py-4"><summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-[.14em]">Delivery Information <span className="float-right group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-muted">Delivery is available across {businessConfig.country}. Charges and the authoritative total are calculated at checkout. Delivery timing requires owner confirmation.</p></details>
-      <details className="group py-4"><summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-[.14em]">Return &amp; Exchange <span className="float-right group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-muted">Eligibility and timing are subject to the published policy and owner confirmation. <Link href="/return-exchange-policy" className="font-medium text-brand-green underline">Review the policy</Link> or contact support before returning an item.</p></details>
-    </div>
-  </section>;
+export function ProductPurchasePanel({product}:{product:Product}) {
+ const type=product.product_type??"unstitched", variants=activeVariants(product), details=product.details;
+ const colors=useMemo(()=>[...new Map(variants.filter(v=>v.color_id&&v.color).map(v=>[v.color_id,v.color!])).values()],[variants]);
+ const [colorId,setColorId]=useState<string|null>(null),[size,setSize]=useState("");
+ const sizes=[...new Set(variants.filter(v=>!colors.length||v.color_id===colorId).map(v=>v.size).filter((v):v is NonNullable<typeof v>=>Boolean(v)))];
+ const selected=variants.find(v=>(!colors.length||v.color_id===colorId)&&(type!=="ready_to_wear"||v.size===size));
+ const minimum=type==="loose_fabric"?Number(details?.minimum_quantity??1):1,step=type==="loose_fabric"?Number(details?.quantity_step??1):1;
+ const [quantity,setQuantity]=useState(minimum),[added,setAdded]=useState(false);
+ const stock=selected?Number(selected.stock_quantity):variants.length?0:Number(product.stock), price=Number(selected?.price_override??effectiveProductPrice(product));
+ const complete=(!colors.length||Boolean(colorId))&&(type!=="ready_to_wear"||Boolean(size))&&(!variants.length||Boolean(selected));
+ const validQuantity=type==="loose_fabric"?isValidMeasuredQuantity(quantity,minimum,step):Number.isInteger(quantity)&&quantity>=1;
+ const available=complete&&validQuantity&&stock>=quantity&&stock>0, addToCart=useCartStore(s=>s.addToCart);
+ function chooseColor(id:string){setColorId(id);setSize("");setQuantity(minimum)}
+ function add(){if(!available)return;addToCart({id:product.id,title:product.title,price,image:selected?.image_url??product.images?.[0]??"/images/home/hero-model1.png",productType:type,variantId:selected?.id,size:selected?.size??undefined,color:selected?.color?.name,pieces:details?.pieces??undefined,sellingUnit:details?.selling_unit??undefined,quantity,stock,quantityStep:step,minimumQuantity:minimum,lineKey:`${product.id}:${selected?.id??"base"}`});setAdded(true);window.setTimeout(()=>setAdded(false),1500)}
+ const availability=!complete&&variants.length?"Select options":stock<=0?"Sold Out":stock<=2?`Only ${stock} left`:"In Stock";
+ const composition=[details?.fabric,details?.work_type,details?.season].filter(Boolean),measurements=[details?.width?`Width: ${details.width}`:null,details?.length?`Length: ${details.length}`:null,details?.selling_unit?`Selling unit: ${details.selling_unit}`:null].filter(Boolean);
+ return <section className="min-w-0 lg:sticky lg:top-32 lg:self-start">
+  <p className="text-[11px] font-semibold uppercase tracking-[.2em] text-brand-gold-dark">{productTypeLabels[type]}</p><h1 className="mt-3 font-display text-4xl text-brand-green-dark sm:text-5xl">{product.title}</h1>{product.short_description&&<p className="mt-4 leading-7 text-muted">{product.short_description}</p>}
+  <div className="mt-5 flex flex-wrap items-baseline gap-3"><strong className="text-xl">{money(price)}{type==="loose_fabric"&&details?.selling_unit?` / ${details.selling_unit}`:""}</strong>{hasValidSale(product)&&<span className="text-sm text-muted line-through">{money(Number(product.compare_at_price??product.price))}</span>}</div>{product.base_sku&&!variants.length&&<p className="mt-2 text-xs text-muted">SKU: {product.base_sku}</p>}
+  {colors.length>0&&<fieldset className="mt-7"><legend className="text-xs font-semibold uppercase tracking-[.16em]">Color</legend><div className="mt-3 flex flex-wrap gap-2">{colors.map(c=><button key={c.id} type="button" onClick={()=>chooseColor(c.id)} aria-pressed={colorId===c.id} className={`min-h-11 border px-4 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-dark ${colorId===c.id?"border-brand-green-dark bg-brand-green-dark text-white":"border-border"}`}>{c.name}</button>)}</div></fieldset>}
+  {type==="ready_to_wear"&&<fieldset className="mt-7" disabled={colors.length>0&&!colorId}><legend className="text-xs font-semibold uppercase tracking-[.16em]">Size</legend><div className="mt-3 flex flex-wrap gap-2">{sizes.map(s=>{const v=variants.find(item=>(!colors.length||item.color_id===colorId)&&item.size===s),disabled=!v||Number(v.stock_quantity)<=0;return <button key={s} type="button" disabled={disabled} onClick={()=>{setSize(s);setQuantity(1)}} aria-pressed={size===s} aria-label={`${s}${disabled?" — sold out":""}`} className={`min-h-11 min-w-11 border px-3 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-dark ${size===s?"border-brand-green-dark bg-brand-green-dark text-white":"border-border"} disabled:cursor-not-allowed disabled:opacity-35 disabled:line-through`}>{s}</button>})}{colors.length>0&&!colorId&&<span className="self-center text-xs text-muted">Select a color first</span>}</div></fieldset>}
+  <div className="mt-6 border-y border-border py-4 text-sm" aria-live="polite"><span className={availability==="Sold Out"?"text-error":"text-brand-green"}>{availability}</span>{complete&&stock>0&&<span className="text-muted"> · {stock} {type==="loose_fabric"?`${details?.selling_unit}${stock===1?"":"s"}`:"available"}</span>}{!complete&&productInventory(product)<=0&&<span className="text-error"> · Sold Out</span>}{type==="loose_fabric"&&<p className="mt-1 text-xs text-muted">Minimum {minimum} {details?.selling_unit}; increments of {step} {details?.selling_unit}</p>}</div>
+  <div className="mt-7"><p className="text-xs font-semibold uppercase tracking-[.16em]">{type==="loose_fabric"?`Length (${details?.selling_unit})`:"Quantity"}</p><div className="mt-3 inline-flex min-h-11 items-center border border-border"><button type="button" aria-label="Decrease quantity" onClick={()=>setQuantity(v=>Math.max(minimum,Number((v-step).toFixed(3))))} disabled={quantity<=minimum} className="grid min-h-11 min-w-11 place-items-center disabled:opacity-35"><Minus size={15}/></button><output aria-live="polite" className="min-w-16 text-center text-sm font-semibold">{quantity}</output><button type="button" aria-label="Increase quantity" onClick={()=>setQuantity(v=>Math.min(stock,Number((v+step).toFixed(3))))} disabled={!complete||quantity+step>stock} className="grid min-h-11 min-w-11 place-items-center disabled:opacity-35"><Plus size={15}/></button></div></div>
+  <button type="button" onClick={add} disabled={!available||added} className="mt-7 flex min-h-14 w-full items-center justify-center gap-2 bg-brand-green-dark px-5 text-xs font-semibold uppercase tracking-[.16em] text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold-dark disabled:bg-brand-cream-dark disabled:text-muted">{added?<><Check size={17}/>Added</>:<><ShoppingBag size={17}/>{complete?available?"Add to Cart":"Out of Stock":"Select Options"}</>}</button>
+  <div className="mt-6 divide-y divide-border border-y border-border text-sm">{product.description&&<details open className="py-4"><summary className="cursor-pointer font-semibold">Product Details</summary><p className="mt-3 whitespace-pre-line leading-7 text-muted">{product.description}</p></details>}{composition.length>0&&<details className="py-4"><summary className="cursor-pointer font-semibold">Fabric &amp; Composition</summary><p className="mt-3 leading-7 text-muted">{composition.join(" · ")}</p></details>}{(measurements.length>0||type==="unstitched")&&<details className="py-4"><summary className="cursor-pointer font-semibold">Measurements / What&apos;s Included</summary><div className="mt-3 grid gap-2 text-muted">{measurements.map(item=><p key={item}>{item}</p>)}{type==="unstitched"&&(["shirt","trouser","dupatta"] as const).map(key=>{const item=details?.[key];return item?.included?<p key={key}><strong className="capitalize text-brand-charcoal">{key}:</strong> {[item.fabric,item.length?`${item.length} m`:null,item.width?`${item.width} wide`:null].filter(Boolean).join(" · ")}</p>:null})}</div></details>}{details?.care_instructions&&<details className="py-4"><summary className="cursor-pointer font-semibold">Care Instructions</summary><p className="mt-3 whitespace-pre-line leading-7 text-muted">{details.care_instructions}</p></details>}<details className="py-4"><summary className="cursor-pointer font-semibold">Delivery &amp; Returns</summary><p className="mt-3 leading-7 text-muted">Delivery charges and timing are confirmed at checkout. Eligible items may be returned or exchanged under our published policy.</p></details></div>
+ </section>
 }

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "../components/Providers";
-import { Navbar } from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer";
-import Newsletter from "../components/common/Newsletter";
-import CookiePreferences from "../components/common/CookiePreferences";
+import { StorefrontChrome } from "../components/layout/StorefrontChrome";
 
 export const metadata: Metadata = {
   title: { default: "QurZaib Fabrics | Premium Pakistani Fabrics", template: "%s | QurZaib Fabrics" },
@@ -25,14 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className="antialiased">
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Newsletter />
-          <Footer />
-          <CookiePreferences />
+          <StorefrontChrome>{children}</StorefrontChrome>
         </Providers>
       </body>
     </html>

@@ -1,3 +1,5 @@
+import type { CatalogCategory, CatalogColor, ProductDetails, ProductStatus, ProductType, ProductVariant } from "./product";
+
 export interface Product {
   id: string;
   title: string;
@@ -10,6 +12,26 @@ export interface Product {
   sizes: string[];
   stock: number;
   created_at: string;
+  updated_at?: string;
+  slug?: string;
+  product_type: ProductType;
+  short_description?: string | null;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  status?: ProductStatus;
+  compare_at_price?: number | null;
+  base_sku?: string | null;
+  primary_color_id?: string | null;
+  is_new?: boolean;
+  is_active?: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  category_record?: CatalogCategory | null;
+  primary_color?: CatalogColor | null;
+  details?: ProductDetails | null;
+  variants?: ProductVariant[];
+  collection_ids?: string[];
+  additional_colors?: CatalogColor[];
 }
 
 export interface Order {

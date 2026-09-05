@@ -12,7 +12,7 @@ export async function GET(_request: Request, context: Context) {
       serviceClient.from("order_items").select("*").eq("order_id", id).order("created_at"),
       serviceClient.from("order_status_history").select("id,old_status,new_status,note,changed_by,created_at").eq("order_id", id).order("created_at"),
     ]);
-    return Response.json({ order, items: items ?? [], history: history ?? [] });
+    return Response.json({ order, items: (items ?? []).map((item) => ({ ...item, line_total: item.extended_line_total ?? item.line_total })), history: history ?? [] });
   } catch (error) { return adminErrorResponse(error); }
 }
 

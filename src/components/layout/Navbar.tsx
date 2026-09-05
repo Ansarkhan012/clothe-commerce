@@ -28,29 +28,15 @@ const navLinks = [
 
 function BrandLockup({ compact = false }: { compact?: boolean }) {
   return (
-    <span className="flex min-w-0 items-center gap-2">
+    <span className={`relative block shrink-0 ${compact ? "h-[52px] w-[174px]" : "h-[58px] w-[186px] sm:h-[64px] sm:w-[205px] xl:w-[220px]"}`}>
       <Image
-        src="/images/qurzaib-mark.png"
-        alt=""
-        width={56}
-        height={56}
+        src="/images/qurzaib-logo-display.png"
+        alt="Qurzaib Fabrics"
+        fill
+        sizes={compact ? "174px" : "(max-width: 640px) 186px, (max-width: 1280px) 205px, 220px"}
         priority
-        className={`shrink-0 object-contain ${
-          compact ? "h-10 w-10" : "h-11 w-11 sm:h-12 sm:w-12"
-        }`}
+        className="object-contain object-center"
       />
-
-      <span className="min-w-0 leading-none">
-        <span className="block truncate font-display text-[17px] tracking-[0.11em] text-brand-green-dark sm:text-[20px]">
-          QURZAIB
-        </span>
-
-        <span className="mt-1 block truncate text-[8px] tracking-[0.28em] text-accent sm:text-[9px]">
-          FABRICS
-        </span>
-      </span>
-
-      <span className="sr-only">QurZaib Fabrics</span>
     </span>
   );
 }
@@ -125,7 +111,7 @@ export function Navbar() {
       {/* Main Navbar */}
       <nav
         aria-label="Primary navigation"
-        className="mx-auto flex h-[68px] w-full max-w-[1440px] items-center justify-between gap-2 px-3 sm:h-[74px] sm:px-6 lg:px-10"
+        className="mx-auto flex h-[76px] w-full max-w-[1440px] items-center justify-between gap-2 px-3 sm:h-[84px] sm:px-6 lg:h-[92px] lg:px-10"
       >
         {/* Mobile Menu */}
         <div className="flex min-w-[40px] items-center lg:hidden">
@@ -151,12 +137,12 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-5 lg:flex xl:gap-8">
+        <div className="hidden items-center gap-4 lg:flex xl:gap-7">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap border-b border-transparent py-2 text-[11px] font-medium tracking-wide text-brand-charcoal transition hover:border-brand-gold-dark hover:text-brand-green"
+              className="whitespace-nowrap border-b border-transparent py-2 text-[11px] font-medium tracking-wide text-brand-charcoal transition hover:border-brand-gold-dark hover:text-brand-gold-dark focus-visible:text-brand-gold-dark"
             >
               {link.label}
             </Link>

@@ -1,15 +1,11 @@
 import { ProductCard } from "@/src/components/common/ProductCard";
-import { createClient } from "@/src/lib/supabase/server";
+import { connection } from "next/server";
+import { getSaleProducts } from "@/src/lib/catalog";
 import { Product } from "@/src/types/supabase";
 
 export default async function SalePage() {
-  const supabase = await createClient();
-  
-  const { data: saleItems } = await supabase
-    .from('products')
-    .select('*')
-    .not('sale_price', 'is', null)
-    .order('created_at', { ascending: false });
+  await connection();
+  const saleItems = await getSaleProducts();
 
   return (
     <div>

@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --brand-green: #0f3d2e;
-  --brand-green-dark: #082a20;
-  --brand-gold: #c8a96b;
-  --brand-gold-dark: #a88746;
-  --brand-cream: #f7f3ea;
-  --brand-cream-dark: #e7d7b1;
+  --brand-green: #1a1a1a;
+  --brand-green-dark: #1a1a1a;
+  --brand-gold: #c7a66a;
+  --brand-gold-dark: #9d7b3f;
+  --brand-cream: #f7f3ed;
+  --brand-cream-dark: #eee6db;
   --brand-charcoal: #1a1a1a;
-  --brand-gray: #6b6b6b;
+  --brand-gray: #6e685f;
   --brand-white: #ffffff;
   --color-primary: var(--brand-green-dark);
   --color-accent: var(--brand-gold-dark);
-  --color-accent-dark: #80652f;
+  --color-accent-dark: #9d7b3f;
   --color-bg: var(--brand-cream);
   --color-surface: var(--brand-white);
   --color-muted: var(--brand-gray);
-  --color-border: #ded5c5;
-  --color-success: #276749;
-  --color-error: #b42318;
+  --color-border: #e4ddd3;
+  --color-success: #2f6b4f;
+  --color-error: #b44343;
 }
 
 @theme {
   --color-primary: var(--brand-green-dark);
   --color-accent: var(--brand-gold-dark);
-  --color-accent-dark: #80652f;
+  --color-accent-dark: #9d7b3f;
   --color-bg: var(--brand-cream);
   --color-surface: var(--brand-white);
   --color-muted: var(--brand-gray);
-  --color-border: #ded5c5;
-  --color-success: #276749;
-  --color-error: #b42318;
+  --color-border: #e4ddd3;
+  --color-success: #2f6b4f;
+  --color-error: #b44343;
   --color-brand-green: var(--brand-green);
   --color-brand-green-dark: var(--brand-green-dark);
   --color-brand-gold: var(--brand-gold);
@@ -64,6 +64,12 @@ body {
   background-image: radial-gradient(circle at 1px 1px, rgb(200 169 107 / 0.14) 1px, transparent 0);
   background-size: 18px 18px;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

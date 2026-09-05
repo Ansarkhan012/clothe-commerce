@@ -1,16 +1,12 @@
 import { ProductCard } from "@/src/components/common/ProductCard";
+import { connection } from "next/server";
 import { NewArrivalHero } from "@/src/components/new-arrivals/NewArrivalHero";
-import { createClient } from "@/src/lib/supabase/server";
+import { getLatestProducts } from "@/src/lib/catalog";
 import { Product } from "@/src/types/supabase";
 
 export default async function NewArrivalsPage() {
-  const supabase = await createClient();
-  
-  const { data: newProducts } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(20);
+  await connection();
+  const newProducts = await getLatestProducts(20);
 
   return (
     <div>
@@ -20,7 +16,7 @@ export default async function NewArrivalsPage() {
         {newProducts && newProducts.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-9 sm:gap-x-6">
             {newProducts.map((product: Product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} isNew />
             ))}
           </div>
         ) : (

@@ -10,10 +10,8 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If Supabase not configured, skip auth check
   if (!url || !key) {
-    console.warn('Supabase not configured, skipping auth proxy');
-    return response;
+    return NextResponse.redirect(new URL('/admin-login?error=configuration', request.url));
   }
 
   try {
@@ -32,9 +30,9 @@ export async function proxy(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (request.nextUrl.pathname.startsWith('/admin-portal')) {
+    if (request.nextUrl.pathname.startsWith('/admin')) {
       if (!user) {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/admin-login', request.url));
       }
 
       const { data: profile, error: roleError } = await supabase
@@ -43,16 +41,17 @@ export async function proxy(request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle();
       if (roleError || profile?.role !== 'admin') {
-        return NextResponse.redirect(new URL('/', request.url));
+        return NextResponse.redirect(new URL('/admin-login?error=forbidden', request.url));
       }
     }
   } catch (error) {
     console.error('Proxy error:', error);
+    return NextResponse.redirect(new URL('/admin-login?error=authentication', request.url));
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ['/admin-portal/:path*'],
+  matcher: ['/admin/:path*'],
 };

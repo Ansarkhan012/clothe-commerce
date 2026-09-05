@@ -21,7 +21,10 @@ export async function GET(request: Request) {
     if (paymentMethod) query = query.eq("payment_method", paymentMethod);
     if (fromDate) query = query.gte("created_at", `${fromDate}T00:00:00.000Z`);
     if (toDate) query = query.lte("created_at", `${toDate}T23:59:59.999Z`);
-    if (search) query = query.or(`public_order_id.ilike.%${search.replace(/[%(),]/g, "")}%,phone_number.ilike.%${search.replace(/[%(),]/g, "")}%`);
+    if (search) {
+      const safeSearch = search.replace(/[%(),]/g, "");
+      query = query.or(`public_order_id.ilike.%${safeSearch}%,customer_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,phone_number.ilike.%${safeSearch}%`);
+    }
     const ascending = url.searchParams.get("sort") === "oldest";
     const from = (page - 1) * pageSize;
     const { data, error, count } = await query.order("created_at", { ascending }).range(from, from + pageSize - 1);

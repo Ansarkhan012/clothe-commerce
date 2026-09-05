@@ -10,9 +10,11 @@ export const PakistaniPhoneSchema = z.string().trim().min(11).max(16)
 
 export const CheckoutItemSchema = z.object({
   product_id: z.string().uuid(),
-  size: z.enum(["S", "M", "L", "XL"]),
-  quantity: z.number().int().min(1).max(MAX_QUANTITY_PER_ITEM),
-}).strict();
+  variant_id: z.string().uuid().nullable().optional(),
+  size: z.enum(["XS", "S", "M", "L", "XL", "XXL"]).optional(),
+  selling_unit: z.enum(["meter", "yard"]).optional(),
+  quantity: z.number().positive().max(1000),
+}).strict().superRefine((item,ctx)=>{if(!item.selling_unit&&(!Number.isInteger(item.quantity)||item.quantity>MAX_QUANTITY_PER_ITEM))ctx.addIssue({code:"custom",message:"Quantity must be a whole number from 1 to 20",path:["quantity"]});});
 
 export const CheckoutSchema = z.object({
   customer_name: z.string().trim().min(2).max(100),
@@ -55,9 +57,9 @@ export type CheckoutItem = z.infer<typeof CheckoutItemSchema>;
 export function normalizeCheckoutItems(items: CheckoutItem[]): CheckoutItem[] {
   const normalized = new Map<string, CheckoutItem>();
   for (const item of items) {
-    const key = `${item.product_id}:${item.size}`;
+    const key = `${item.product_id}:${item.variant_id ?? item.size ?? "base"}`;
     const quantity = (normalized.get(key)?.quantity ?? 0) + item.quantity;
-    if (quantity > MAX_QUANTITY_PER_ITEM) {
+    if (!item.selling_unit && quantity > MAX_QUANTITY_PER_ITEM) {
       throw new Error("Combined item quantity exceeds the allowed maximum");
     }
     normalized.set(key, { ...item, quantity });

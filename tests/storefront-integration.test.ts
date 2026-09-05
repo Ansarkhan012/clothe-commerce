@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { activeVariants, effectiveProductPrice, isValidMeasuredQuantity, productHref, productInventory } from "../src/lib/product-commerce.ts";
+import type { Product } from "../src/types/supabase.ts";
+
+const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
+const base:Product={id:"00000000-0000-4000-8000-000000000001",title:"Test",slug:"test-product",description:null,price:1000,sale_price:null,category:"Test",featured:false,images:["https://example.com/p.jpg"],sizes:[],stock:4,created_at:"2026-01-01",product_type:"unstitched",variants:[]};
+const variant=(id:string,size:"S"|"M"|null,stock:number,active=true)=>({id,product_id:base.id,color_id:"00000000-0000-4000-8000-000000000010",size,sku:id,stock_quantity:stock,price_override:null,image_url:null,is_active:active,color:{id:"00000000-0000-4000-8000-000000000010",name:"Ivory",slug:"ivory",hex_code:"#fffff0",sort_order:1,is_active:true}});
+
+test("RTW card inventory derives from active variants",()=>assert.equal(productInventory({...base,product_type:"ready_to_wear",stock:0,variants:[variant("s","S",3),variant("m","M",5)]}),8));
+test("variant inventory overrides nonzero base stock",()=>assert.equal(productInventory({...base,stock:99,variants:[variant("c",null,2)]}),2));
+test("inactive variants are not purchasable or counted",()=>{const p={...base,variants:[variant("a",null,2),variant("i",null,20,false)]};assert.equal(activeVariants(p).length,1);assert.equal(productInventory(p),2)});
+test("base stock remains authoritative without active variants",()=>assert.equal(productInventory({...base,variants:[variant("i",null,20,false)]}),4));
+test("admin inventory sums RTW active variants",()=>assert.equal(productInventory({...base,product_type:"ready_to_wear",stock:0,variants:[variant("s","S",3),variant("m","M",5)]}),8));
+test("admin inventory sums unstitched color variants",()=>assert.equal(productInventory({...base,product_type:"unstitched",stock:0,variants:[variant("u",null,6)]}),6));
+test("admin inventory sums dupatta color variants",()=>assert.equal(productInventory({...base,product_type:"dupatta",stock:0,variants:[variant("d",null,4)]}),4));
+test("admin inventory sums shawl color variants",()=>assert.equal(productInventory({...base,product_type:"shawl",stock:0,variants:[variant("s",null,7)]}),7));
+test("admin inventory ignores inactive variants",()=>assert.equal(productInventory({...base,stock:2,variants:[variant("i",null,99,false)]}),2));
+test("admin products list reuses shared inventory and preserves loose-fabric decimal stock",()=>{const admin=read("../src/app/admin/products/page.tsx");assert.match(admin,/productInventory\(product\)/);assert.match(admin,/product_type==="loose_fabric"\?Number\(product\.stock\)/);assert.match(admin,/inventory<=0\?"Sold out":inventory<=5\?"Low stock"/)});
+test("valid sale price renders as effective price",()=>assert.equal(effectiveProductPrice({...base,sale_price:800}),800));
+test("invalid sale price falls back to regular price",()=>assert.equal(effectiveProductPrice({...base,sale_price:1200}),1000));
+test("canonical product link uses slug",()=>assert.equal(productHref(base),"/product/test-product"));
+test("legacy product link falls back to ID",()=>assert.match(productHref({...base,slug:undefined}),/00000000/));
+test("loose fabric supports decimal quantity",()=>assert.equal(isValidMeasuredQuantity(2.5,1,.5),true));
+test("loose fabric rejects quantity below minimum",()=>assert.equal(isValidMeasuredQuantity(.5,1,.5),false));
+test("loose fabric rejects quantity off increment",()=>assert.equal(isValidMeasuredQuantity(1.25,1,.5),false));
+test("RTW selection is required before Add to Cart",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/complete\?available\?"Add to Cart"/));
+test("color changes reset an invalid size",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/setColorId\(id\);setSize\(""\)/));
+test("out-of-stock sizes are disabled",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/stock_quantity\)<=0/));
+test("different variants generate different cart line keys",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/selected\?\.id\?\?"base"/));
+test("non-RTW products never render the size fieldset",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/type==="ready_to_wear"&&<fieldset/));
+test("checkout preserves variant IDs and decimal quantities",()=>{const checkout=read("../src/app/checkout/page.tsx");assert.match(checkout,/variant_id:variantId\?\?null/);assert.match(checkout,/quantity/)});
+test("public catalog excludes inactive and draft products",()=>{const catalog=read("../src/lib/catalog.ts");assert.match(catalog,/eq\("is_active", true\)\.eq\("status", "active"\)/);assert.match(catalog,/\.is_active === true/)});
+test("product metadata uses SEO fields and canonical slug",()=>{const page=read("../src/app/product/[id]/page.tsx");assert.match(page,/seo_title\?\?product\.title/);assert.match(page,/seo_description\?\?product\.short_description/);assert.match(page,/alternates:\{canonical\}/)});
+test("historical and extended order totals retain fallback",()=>{for(const path of ["../src/app/api/orders/track/route.ts","../src/app/api/admin/orders/[id]/route.ts","../src/lib/email/order-email-data.ts"])assert.match(read(path),/extended_line_total \?\? item\.line_total/)});

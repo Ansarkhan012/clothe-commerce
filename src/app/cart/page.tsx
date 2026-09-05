@@ -7,6 +7,7 @@ import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, AlertCircle } from "lucid
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { businessConfig, calculateDisplayedDelivery } from "@/src/config/business";
+import { lineSelectionLabel } from "@/src/lib/product-commerce";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
@@ -57,7 +58,7 @@ export default function CartPage() {
         <div className="lg:col-span-2 space-y-6">
           {cart.map((item) => (
             <div
-              key={`${item.id}-${item.size}`}
+              key={item.lineKey}
               className="flex gap-4 bg-surface p-4 border border-border rounded-sm"
             >
               <div className="relative w-24 h-32 shrink-0 bg-muted/10 overflow-hidden">
@@ -65,6 +66,7 @@ export default function CartPage() {
                   src={item.image}
                   alt={item.title}
                   fill
+                  sizes="96px"
                   className="object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/images/home/hero-model.png';
@@ -75,21 +77,21 @@ export default function CartPage() {
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-display text-lg font-semibold text-primary">{item.title}</h3>
-                  <p className="text-sm text-muted mt-1">Size: {item.size}</p>
+                  <p className="text-sm text-muted mt-1">{lineSelectionLabel(item)}</p>
                   <p className="text-accent font-bold mt-1">Rs. {item.price.toLocaleString()}</p>
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
                   <div className="flex items-center border border-border">
                     <button
-                      onClick={() => updateQuantity(item.id, item.size, Math.max(1, item.quantity - 1))}
+                      onClick={() => updateQuantity(item.lineKey, Math.max(item.minimumQuantity ?? 1, Number((item.quantity - (item.quantityStep ?? 1)).toFixed(3))))}
                       className="p-2 hover:bg-bg transition-colors"
                     >
                       <Minus size={14} />
                     </button>
                     <span className="px-4 text-sm font-medium">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.lineKey, Number((item.quantity + (item.quantityStep ?? 1)).toFixed(3)))}
                       disabled={item.stock !== undefined && item.quantity >= item.stock}
                       className="p-2 hover:bg-bg transition-colors"
                       aria-label={`Increase ${item.title} quantity`}
@@ -99,7 +101,7 @@ export default function CartPage() {
                   </div>
 
                   <button
-                    onClick={() => removeFromCart(item.id, item.size)}
+                    onClick={() => removeFromCart(item.lineKey)}
                     className="text-muted hover:text-error transition-colors p-2"
                     aria-label={`Remove ${item.title} from cart`}
                   >

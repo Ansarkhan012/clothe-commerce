@@ -1,20 +1,15 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArrowRight } from "lucide-react";
 import HeroSection from "@/src/components/home/HeroSection";
 import { TrustStrip } from "@/src/components/home/TrustStrip";
-import { CategorySection, type CategoryItem } from "@/src/components/home/CategorySection";
+import { CategorySection } from "@/src/components/home/CategorySection";
 import { ProductCard } from "@/src/components/common/ProductCard";
-import { createClient } from "@/src/lib/supabase/server";
-import type { Product } from "@/src/types/supabase";
+import { getCatalogCategoryItems, getLatestProducts } from "@/src/lib/catalog";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false }).limit(12);
-  const products = (data ?? []) as Product[];
-  const categories = [...new Map(products.filter((product) => product.category).map((product) => [
-    product.category,
-    { name: product.category, image: product.images?.[0] } satisfies CategoryItem,
-  ])).values()];
+  await connection();
+  const [products, categories] = await Promise.all([getLatestProducts(12), getCatalogCategoryItems()]);
   const arrivals = products.slice(0, 8);
   const sale = products.filter((product) => product.sale_price !== null).slice(0, 4);
 
@@ -29,7 +24,7 @@ export default async function HomePage() {
           <div><p className="text-[10px] font-semibold tracking-[0.28em] text-accent">THE LATEST EDIT</p><h2 className="mt-2 font-display text-3xl text-brand-green-dark sm:text-4xl">New Arrivals</h2></div>
           <Link href="/new-arrivals" className="hidden items-center gap-2 text-xs font-semibold tracking-wide text-brand-green-dark hover:text-accent sm:flex">View all <ArrowRight size={15} /></Link>
         </div>
-        {arrivals.length ? <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-6 lg:grid-cols-4">{arrivals.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <div className="border border-border bg-brand-cream px-5 py-16 text-center text-sm text-muted">Our new collection is being prepared. Please check back soon.</div>}
+        {arrivals.length ? <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-6 lg:grid-cols-4">{arrivals.map((product) => <ProductCard key={product.id} product={product} isNew />)}</div> : <div className="border border-border bg-brand-cream px-5 py-16 text-center text-sm text-muted">Our new collection is being prepared. Please check back soon.</div>}
       </div>
     </section>
 
