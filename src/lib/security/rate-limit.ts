@@ -6,13 +6,14 @@ import { createServiceClient } from "@/src/lib/supabase/service";
 
 export function getRequestIp(request: Request) {
   const trustedForwardedHeader = process.env.RATE_LIMIT_IP_HEADER?.toLowerCase();
-  const platformHeader =
-    request.headers.get("cf-connecting-ip") ||
-    request.headers.get("x-vercel-forwarded-for") ||
-    request.headers.get("x-real-ip");
   const configuredHeader = trustedForwardedHeader
     ? request.headers.get(trustedForwardedHeader)
     : null;
+  const platformHeader = process.env.VERCEL === "1"
+    ? request.headers.get("x-vercel-forwarded-for") || request.headers.get("x-real-ip")
+    : process.env.CF_PAGES === "1"
+      ? request.headers.get("cf-connecting-ip")
+      : null;
   const ip = (configuredHeader || platformHeader)?.split(",")[0]?.trim();
 
   if (ip) {
@@ -27,9 +28,11 @@ export function getRequestIp(request: Request) {
   // Do not collapse every unidentifiable production request  bucket.
   // This is a privacy-preserving fallback, not an authentication signal.
   const fingerprint = [
+    request.headers.get("cookie") || "no-cookie",
     request.headers.get("user-agent") || "no-user-agent",
     request.headers.get("accept-language") || "no-language",
     request.headers.get("accept-encoding") || "no-encoding",
+    request.headers.get("sec-ch-ua-platform") || "no-platform",
   ].join("|");
 
   return `client-${createHash("sha256").update(fingerprint).digest("hex")}`;
@@ -49,7 +52,8 @@ export async function consumeRateLimit(
     .update(key)
     .digest("hex");
 
-  const { data, error } = await createServiceClient().rpc("consume_api_rate_limit",
+  try {
+    const { data, error } = await createServiceClient().rpc("consume_api_rate_limit",
       {
         p_key_hash: keyHash,
         p_limit: limit,
@@ -60,14 +64,35 @@ export async function consumeRateLimit(
       }
     );
 
-  if (error) {
-    console.error(
-      "Distributed rate limiter unavailable",
-      error
-    );
+    if (error) {
+      console.error("Distributed rate limiter unavailable; request allowed", {
+        code: error.code,
+        message: error.message,
+      });
 
-    return false;
+      return true;
+    }
+
+    if (data !== true && data !== false) {
+      console.error("Distributed rate limiter returned an invalid decision; request allowed");
+      return true;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Distributed rate limiter failed unexpectedly; request allowed", {
+      message: error instanceof Error ? error.message : "Unknown rate limiter error",
+    });
+    return true;
   }
+}
 
-  return data === true;
+export function rateLimitExceededResponse(windowMs: number) {
+  return Response.json(
+    { message: "Too many requests. Please try again shortly." },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.max(1, Math.ceil(windowMs / 1000))) },
+    }
+  );
 }

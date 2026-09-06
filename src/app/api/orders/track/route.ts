@@ -1,10 +1,11 @@
 import { TrackOrderSchema } from "@/src/lib/validations/order";
 import { createServiceClient } from "@/src/lib/supabase/service";
-import { consumeRateLimit, getRequestIp } from "@/src/lib/security/rate-limit";
+import { consumeRateLimit, getRequestIp, rateLimitExceededResponse } from "@/src/lib/security/rate-limit";
 
 export async function POST(request: Request) {
-  if (!await consumeRateLimit(`track:${getRequestIp(request)}`, 8, 10 * 60_000)) {
-    return Response.json({ message: "Order not found" }, { status: 404 });
+  const rateWindow = 15 * 60_000;
+  if (!await consumeRateLimit(`track:${getRequestIp(request)}`, 60, rateWindow)) {
+    return rateLimitExceededResponse(rateWindow);
   }
   try {
     const rawBody = await request.text();

@@ -1,6 +1,6 @@
 import { CheckoutSchema, normalizeCheckoutItems } from "@/src/lib/validations/order";
 import { createServiceClient } from "@/src/lib/supabase/service";
-import { consumeRateLimit, getRequestIp } from "@/src/lib/security/rate-limit";
+import { consumeRateLimit, getRequestIp, rateLimitExceededResponse } from "@/src/lib/security/rate-limit";
 import { sendOrderEmails } from "@/src/lib/email/send-order-emails";
 
 const MAX_BODY_BYTES = 32_768;
@@ -48,12 +48,8 @@ export async function POST(request: Request) {
     }
 
     // Rate-limit valid checkout attempts
-    const isProduction = process.env.NODE_ENV === "production";
-
-    const rateLimit = isProduction ? 20 : 100;
-    const rateWindow = isProduction
-      ? 10 * 60_000
-      : 60_000;
+    const rateLimit = 60;
+    const rateWindow = 15 * 60_000;
 
     const ip = getRequestIp(request);
 
@@ -64,13 +60,7 @@ export async function POST(request: Request) {
     );
 
     if (!allowed) {
-      return Response.json(
-        {
-          message:
-            "Too many checkout attempts. Please try again shortly.",
-        },
-        { status: 429, headers: { "Retry-After": String(Math.ceil(rateWindow / 1000)) } }
-      );
+      return rateLimitExceededResponse(rateWindow);
     }
 
     let items;
