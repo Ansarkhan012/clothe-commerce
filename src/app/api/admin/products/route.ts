@@ -28,7 +28,8 @@ export async function POST(request: Request) {
 
     const parsed = ProductInputSchema.safeParse(json);
     if (!parsed.success) {
-      return Response.json({ message: "Invalid product", issues: parsed.error.flatten().fieldErrors }, { status: 400 });
+      const issues = parsed.error.flatten().fieldErrors;
+      return Response.json({ message: issues.variants?.[0] ?? "Invalid product", issues }, { status: 400 });
     }
 
     const { serviceClient } = await requireAdmin();

@@ -1,3 +1,28 @@
-import { requireAdmin } from "@/src/lib/auth/admin";import { ProductInputSchema } from "@/src/lib/validations/product";import { z } from "zod";
+import { z } from "zod";
+
+import { requireAdmin } from "@/src/lib/auth/admin";
 import { logServerDatabaseError } from "@/src/lib/errors/supabase-error";
-export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}){try{const {id}=await params;if(!z.string().uuid().safeParse(id).success)return Response.json({message:"Invalid product"},{status:400});const parsed=ProductInputSchema.safeParse(await request.json());if(!parsed.success)return Response.json({message:"Invalid product",issues:parsed.error.flatten().fieldErrors},{status:400});const {serviceClient}=await requireAdmin();const {data,error}=await serviceClient.rpc("save_product",{p_product:parsed.data,p_product_id:id});if(error){if(error.message.includes("PRODUCT_TYPE_LOCKED"))return Response.json({message:"Product type cannot change after variants or orders exist"},{status:409});throw error}return Response.json({id:data});}catch(error){logServerDatabaseError("Admin product update failed",error);return Response.json({message:"Unable to save product"},{status:500});}}
+import { ProductInputSchema } from "@/src/lib/validations/product";
+
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    if (!z.string().uuid().safeParse(id).success) return Response.json({ message: "Invalid product" }, { status: 400 });
+    const parsed = ProductInputSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      const issues = parsed.error.flatten().fieldErrors;
+      return Response.json({ message: issues.variants?.[0] ?? "Invalid product", issues }, { status: 400 });
+    }
+    const { serviceClient } = await requireAdmin();
+    const { data, error } = await serviceClient.rpc("save_product", { p_product: parsed.data, p_product_id: id });
+    if (error) {
+      if (error.code === "23505") return Response.json({ message: "The product slug or a variant SKU is already in use" }, { status: 409 });
+      if (error.message.includes("PRODUCT_TYPE_LOCKED")) return Response.json({ message: "Product type cannot change after variants or orders exist" }, { status: 409 });
+      throw error;
+    }
+    return Response.json({ id: data });
+  } catch (error) {
+    logServerDatabaseError("Admin product update failed", error);
+    return Response.json({ message: "Unable to save product" }, { status: 500 });
+  }
+}

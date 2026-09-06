@@ -1,7 +1,7 @@
 "use client";
 import { Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
-import { activeVariants, effectiveProductPrice, hasValidSale, isValidMeasuredQuantity, productInventory } from "@/src/lib/product-commerce";
+import { activeVariants, effectiveProductPrice, hasValidSale, isValidMeasuredQuantity, productInventory, resolveProductVariant } from "@/src/lib/product-commerce";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { Product } from "@/src/types/supabase";
 import { productTypeLabels } from "@/src/types/product";
@@ -12,7 +12,7 @@ export function ProductPurchasePanel({product}:{product:Product}) {
  const colors=useMemo(()=>[...new Map(variants.filter(v=>v.color_id&&v.color).map(v=>[v.color_id,v.color!])).values()],[variants]);
  const [colorId,setColorId]=useState<string|null>(null),[size,setSize]=useState("");
  const sizes=[...new Set(variants.filter(v=>!colors.length||v.color_id===colorId).map(v=>v.size).filter((v):v is NonNullable<typeof v>=>Boolean(v)))];
- const selected=variants.find(v=>(!colors.length||v.color_id===colorId)&&(type!=="ready_to_wear"||v.size===size));
+ const selected=resolveProductVariant(variants,type,colorId,size);
  const minimum=type==="loose_fabric"?Number(details?.minimum_quantity??1):1,step=type==="loose_fabric"?Number(details?.quantity_step??1):1;
  const [quantity,setQuantity]=useState(minimum),[added,setAdded]=useState(false);
  const stock=selected?Number(selected.stock_quantity):variants.length?0:Number(product.stock), price=Number(selected?.price_override??effectiveProductPrice(product));
@@ -20,7 +20,7 @@ export function ProductPurchasePanel({product}:{product:Product}) {
  const validQuantity=type==="loose_fabric"?isValidMeasuredQuantity(quantity,minimum,step):Number.isInteger(quantity)&&quantity>=1;
  const available=complete&&validQuantity&&stock>=quantity&&stock>0, addToCart=useCartStore(s=>s.addToCart);
  function chooseColor(id:string){setColorId(id);setSize("");setQuantity(minimum)}
- function add(){if(!available)return;addToCart({id:product.id,title:product.title,price,image:selected?.image_url??product.images?.[0]??"/images/home/hero-model1.png",productType:type,variantId:selected?.id,size:selected?.size??undefined,color:selected?.color?.name,pieces:details?.pieces??undefined,sellingUnit:details?.selling_unit??undefined,quantity,stock,quantityStep:step,minimumQuantity:minimum,lineKey:`${product.id}:${selected?.id??"base"}`});setAdded(true);window.setTimeout(()=>setAdded(false),1500)}
+ function add(){if(!available)return;addToCart({id:product.id,title:product.title,price,image:selected?.image_url??product.images?.[0]??"/images/home/hero-model1.png",productType:type,variantId:selected?.id,sku:selected?.sku,size:selected?.size??undefined,color:selected?.color?.name,pieces:details?.pieces??undefined,sellingUnit:details?.selling_unit??undefined,quantity,stock,quantityStep:step,minimumQuantity:minimum,lineKey:`${product.id}:${selected?.id??"base"}`});setAdded(true);window.setTimeout(()=>setAdded(false),1500)}
  const availability=!complete&&variants.length?"Select options":stock<=0?"Sold Out":stock<=2?`Only ${stock} left`:"In Stock";
  const composition=[details?.fabric,details?.work_type,details?.season].filter(Boolean),measurements=[details?.width?`Width: ${details.width}`:null,details?.length?`Length: ${details.length}`:null,details?.selling_unit?`Selling unit: ${details.selling_unit}`:null].filter(Boolean);
  return <section className="min-w-0 lg:sticky lg:top-32 lg:self-start">

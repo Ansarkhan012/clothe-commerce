@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { FabricUnit, ProductType } from '@/src/types/product';
+import { sanitizePersistedCart } from '@/src/lib/cart-persistence';
 
 export interface CartItem {
   id: string;
@@ -10,6 +11,7 @@ export interface CartItem {
   image: string;
   productType: ProductType;
   variantId?: string;
+  sku?: string;
   size?: string;
   color?: string;
   pieces?: number;
@@ -64,8 +66,12 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'karachi-apparel-cart-storage', // Key name in localStorage
-      version: 2,
-      migrate: () => ({ cart: [] }),
+      version: 3,
+      migrate: (persisted) => ({ cart: sanitizePersistedCart((persisted as { cart?: unknown })?.cart) }),
+      merge: (persisted, current) => ({
+        ...current,
+        cart: sanitizePersistedCart((persisted as { cart?: unknown })?.cart),
+      }),
       skipHydration: true,
     }
   )

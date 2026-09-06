@@ -4,6 +4,45 @@ import { consumeRateLimit, getRequestIp, rateLimitExceededResponse } from "@/src
 import { sendOrderEmails } from "@/src/lib/email/send-order-emails";
 
 const MAX_BODY_BYTES = 32_768;
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+type NormalizedCheckoutItem = ReturnType<typeof normalizeCheckoutItems>[number];
+
+async function logNormalizedItems(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  items: NormalizedCheckoutItem[]
+) {
+  if (!isDevelopment) return;
+
+  const productIds = [...new Set(items.map((item) => item.product_id))];
+  const { data, error } = await serviceClient
+    .from("products")
+    .select("id,product_type")
+    .in("id", productIds);
+
+  if (error) {
+    console.error("Checkout normalized-item product-type lookup failed", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+  }
+
+  const productTypes = new Map(
+    (data ?? []).map((product) => [product.id, product.product_type])
+  );
+
+  console.info(
+    "Checkout normalized items",
+    items.map((item) => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id ?? null,
+      quantity: item.quantity,
+      product_type: productTypes.get(item.product_id) ?? "unavailable",
+    }))
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +80,17 @@ export async function POST(request: Request) {
     const parsed = CheckoutSchema.safeParse(json);
 
     if (!parsed.success) {
+      if (isDevelopment) {
+        console.error(
+          "Checkout rejected before create_atomic_order",
+          parsed.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            code: issue.code,
+            message: issue.message,
+          }))
+        );
+      }
+
       return Response.json(
         { message: "Invalid checkout request" },
         { status: 400 }
@@ -67,7 +117,13 @@ export async function POST(request: Request) {
 
     try {
       items = normalizeCheckoutItems(parsed.data.items);
-    } catch {
+    } catch (error) {
+      if (isDevelopment) {
+        console.error("Checkout item normalization failed before create_atomic_order", {
+          message: error instanceof Error ? error.message : "Unknown normalization error",
+        });
+      }
+
       return Response.json(
         { message: "Invalid checkout request" },
         { status: 400 }
@@ -75,6 +131,7 @@ export async function POST(request: Request) {
     }
 
     const serviceClient = createServiceClient();
+    await logNormalizedItems(serviceClient, items);
     const { data, error } =
       await serviceClient.rpc(
         "create_atomic_order",
@@ -121,6 +178,15 @@ export async function POST(request: Request) {
       );
 
     if (error || !data?.[0]) {
+      if (isDevelopment) {
+        console.error("Checkout create_atomic_order RPC failed", {
+          message: error?.message ?? "RPC returned no order",
+          code: error?.code ?? null,
+          details: error?.details ?? null,
+          hint: error?.hint ?? null,
+        });
+      }
+
       const message =
         error?.message?.includes("OUT_OF_STOCK")
           ? "One or more items are out of stock"

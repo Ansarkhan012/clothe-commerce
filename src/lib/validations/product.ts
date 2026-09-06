@@ -34,6 +34,7 @@ export const ProductInputSchema = z.discriminatedUnion("product_type", [
   if(value.product_type==="ready_to_wear"&&!value.variants.some(v=>v.is_active))ctx.addIssue({code:"custom",message:"Ready to wear requires an active variant",path:["variants"]});
   if(value.variants.some(v=>!Number.isInteger(v.stock_quantity)))ctx.addIssue({code:"custom",message:"Variant stock must be a whole number",path:["variants"]});
   if(value.product_type==="ready_to_wear"&&value.variants.some(v=>v.is_active&&v.size===null))ctx.addIssue({code:"custom",message:"Active ready-to-wear variants require a size",path:["variants"]});
+  if(value.product_type==="ready_to_wear"&&value.variants.some(v=>v.is_active&&v.color_id===null))ctx.addIssue({code:"custom",message:"Active ready-to-wear variants require a color",path:["variants"]});
   if(value.product_type!=="ready_to_wear"&&value.variants.some(v=>v.size!==null))ctx.addIssue({code:"custom",message:"Sizes are only valid for ready to wear",path:["variants"]});
   const skus=value.variants.map(v=>v.sku.trim().toLowerCase());
   if(new Set(skus).size!==skus.length)ctx.addIssue({code:"custom",message:"Variant SKUs must be unique",path:["variants"]});

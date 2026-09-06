@@ -56,6 +56,19 @@ test("checkout has one guarded POST and retains a stable idempotency key", () =>
   assert.doesNotMatch(checkoutPage, /setTimeout[\s\S]*fetch\("\/api\/checkout"/);
 });
 
+test("checkout development diagnostics expose item shape and structured RPC errors only on the server", () => {
+  const route = read("../src/app/api/checkout/route.ts");
+  const itemDiagnostics = route.slice(
+    route.indexOf("async function logNormalizedItems"),
+    route.indexOf("export async function POST")
+  );
+  assert.match(route, /if \(!isDevelopment\) return/);
+  assert.match(route, /Checkout normalized items[\s\S]*product_id[\s\S]*variant_id[\s\S]*quantity[\s\S]*product_type/);
+  assert.match(route, /Checkout create_atomic_order RPC failed[\s\S]*message:[\s\S]*code:[\s\S]*details:[\s\S]*hint:/);
+  assert.match(route, /if \(isDevelopment\)[\s\S]*Checkout create_atomic_order RPC failed/);
+  assert.doesNotMatch(itemDiagnostics, /phone|address|email/);
+});
+
 test("development test-email endpoint remains unavailable in production", () => {
   const route = read("../src/app/api/dev/test-email/route.ts");
   assert.match(route, /NODE_ENV === "production"[\s\S]*status: 404/);

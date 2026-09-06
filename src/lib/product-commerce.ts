@@ -1,5 +1,5 @@
 import type { Product } from "@/src/types/supabase";
-import type { ProductVariant } from "@/src/types/product";
+import type { ProductType, ProductVariant } from "@/src/types/product";
 
 export const activeVariants = <T extends Pick<ProductVariant, "is_active">>(product: { variants?: T[] }): T[] =>
   (product.variants ?? []).filter((variant) => variant.is_active);
@@ -10,6 +10,19 @@ export const productInventory = <T extends { stock: number; variants?: Array<Pic
     ? variants.reduce((total, variant) => total + Math.max(0, Number(variant.stock_quantity)), 0)
     : Math.max(0, Number(product.stock));
 };
+
+export function resolveProductVariant<T extends Pick<ProductVariant, "color_id" | "size">>(
+  variants: T[],
+  productType: ProductType,
+  colorId: string | null,
+  size: string
+): T | undefined {
+  const hasColors = variants.some((variant) => Boolean(variant.color_id));
+  return variants.find((variant) =>
+    (!hasColors || variant.color_id === colorId) &&
+    (productType !== "ready_to_wear" || variant.size === size)
+  );
+}
 
 export const effectiveProductPrice = (product: Product): number => {
   const base = Number(product.price);
