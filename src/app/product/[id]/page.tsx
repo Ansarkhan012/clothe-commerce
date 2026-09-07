@@ -21,7 +21,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) notFound();
-  const related = await getRelatedProducts(product.category_id, product.id);
+  const related = await getRelatedProducts(product.category_id, product.id, product.product_type);
 
   return <main className="bg-brand-cream text-brand-charcoal">
     <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-8 lg:px-12">

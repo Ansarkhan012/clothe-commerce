@@ -39,12 +39,12 @@ export const getProduct = unstable_cache(async (identifier: string) => {
   return data ? normalizeProduct(data) : null;
 }, ["product-by-id"], { revalidate: 300, tags: ["products"] });
 
-export const getRelatedProducts = unstable_cache(async (categoryId: string | null | undefined, excludedId: string) => {
+export const getRelatedProducts = unstable_cache(async (categoryId: string | null | undefined, excludedId: string, productType?: Product["product_type"]) => {
   if (!categoryId) return [];
   const { data, error } = await publicCatalogClient().from("products").select(productFields).eq("is_active", true).eq("status", "active").eq("category_id", categoryId).neq("id", excludedId)
-    .order("created_at", { ascending: false }).limit(4);
+    .order("created_at", { ascending: false }).limit(12);
   if (error) throw new Error("CATALOG_UNAVAILABLE");
-  return (data ?? []).map((row)=>normalizeProduct(row));
+  return (data ?? []).map((row)=>normalizeProduct(row)).sort((left, right) => Number(right.product_type === productType) - Number(left.product_type === productType)).slice(0, 4);
 }, ["related-products"], { revalidate: 300, tags: ["products"] });
 
 export type CatalogFilters = { q: string; category: string; productType: string; size: string; availability: string; sale: boolean; min: number | null; max: number | null; sort: string; page: number; pageSize: number };

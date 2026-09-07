@@ -1,5 +1,6 @@
 import { adminErrorResponse, requireAdmin } from "@/src/lib/auth/admin";
 import { AdminOrderUpdateSchema } from "@/src/lib/validations/order";
+import { z } from "zod";
 
 type Context = { params: Promise<{ id: string }> };
 export async function GET(_request: Request, context: Context) {
@@ -32,4 +33,43 @@ export async function PATCH(request: Request, context: Context) {
     if (error) return Response.json({ message: error.message.includes("INVALID_TRANSITION") ? "Invalid status transition" : "Unable to update order" }, { status: 400 });
     return Response.json({ order: data });
   } catch (error) { return adminErrorResponse(error); }
+}
+
+const deletableOrderStatuses = new Set(["cancelled", "delivered"]);
+
+export async function DELETE(_request: Request, context: Context) {
+  try {
+    const { serviceClient } = await requireAdmin();
+    const { id } = await context.params;
+    if (!z.string().uuid().safeParse(id).success) return Response.json({ message: "Invalid order" }, { status: 400 });
+
+    const { data: order, error: orderError } = await serviceClient
+      .from("orders")
+      .select("id,order_status")
+      .eq("id", id)
+      .maybeSingle();
+    if (orderError) throw orderError;
+    if (!order) return Response.json({ message: "Order not found" }, { status: 404 });
+    if (!deletableOrderStatuses.has(order.order_status)) {
+      return Response.json({ message: "Only cancelled or delivered orders can be deleted." }, { status: 409 });
+    }
+
+    for (const table of ["order_email_events", "order_status_history", "order_items"] as const) {
+      const { error } = await serviceClient.from(table).delete().eq("order_id", id);
+      if (error) throw error;
+    }
+
+    const { data: deleted, error: deleteError } = await serviceClient
+      .from("orders")
+      .delete()
+      .eq("id", id)
+      .eq("order_status", order.order_status)
+      .select("id")
+      .maybeSingle();
+    if (deleteError) throw deleteError;
+    if (!deleted) return Response.json({ message: "Order status changed; deletion was stopped safely." }, { status: 409 });
+    return Response.json({ success: true });
+  } catch (error) {
+    return adminErrorResponse(error);
+  }
 }
