@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: { default: "QurZaib Fabrics | Premium Pakistani Fabrics", template: "%s | QurZaib Fabrics" },
   description: "Discover premium unstitched and embroidered fabrics from QurZaib Fabrics.",
   applicationName: "QurZaib Fabrics",
+  icons: { icon: "/icon.png", shortcut: "/icon.png", apple: "/icon.png" },
   openGraph: {
     title: "QurZaib Fabrics | Premium Pakistani Fabrics",
     description: "Discover premium unstitched and embroidered fabrics from QurZaib Fabrics.",

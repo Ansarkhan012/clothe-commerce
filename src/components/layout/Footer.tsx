@@ -13,8 +13,8 @@ export default function Footer() {
   return <footer className="mt-20 bg-brand-green-dark text-white">
     <div className="brand-pattern mx-auto grid max-w-[1440px] gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[1.05fr_2fr] lg:px-12">
       <div>
-        <Link href="/" className="inline-flex max-w-full rounded-md border border-brand-gold/25 bg-brand-cream p-4 shadow-sm sm:p-5">
-          <Image src="/images/qurzaib-logo-display.png" alt="Qurzaib Fabrics" width={500} height={312} sizes="(max-width: 640px) 260px, 300px" className="h-auto w-[260px] max-w-full object-contain sm:w-[300px]" />
+        <Link href="/" className="inline-flex max-w-full rounded-md border border-brand-gold/25 bg-brand-cream p-3 shadow-sm">
+          <Image src="/images/qurzaib-logo-display.png" alt="Qurzaib Fabrics" width={500} height={312} sizes="(max-width: 640px) 180px, 210px" className="h-auto w-[180px] max-w-full object-contain sm:w-[210px]" />
         </Link>
         <p className="mt-6 font-display text-xl text-brand-gold">Elegance Woven With Faith</p>
         <p className="mt-3 max-w-sm text-sm leading-7 text-white/70">Thoughtfully curated Pakistani fabrics for timeless wardrobes and meaningful occasions.</p>
