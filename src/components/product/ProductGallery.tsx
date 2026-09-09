@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export function ProductGallery({ images, title }: { images: string[]; title: string }) {
-  const displayImages = images.length ? images : ["/images/home/hero-model.png"];
+  const displayImages = images.length ? images : ["/images/home/hero-model1.png"];
   const [selected, setSelected] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const touchStart = useRef<number | null>(null);

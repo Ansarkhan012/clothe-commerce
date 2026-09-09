@@ -41,7 +41,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   const sidebar = <aside className="flex h-full w-64 flex-col bg-[#111111] text-white">
-    <div className="border-b border-white/10 px-6 py-6"><p className="text-lg font-semibold tracking-tight">Qurzaib Admin</p><p className="mt-1 text-xs text-white/45">Commerce operations</p></div>
+    <div className="border-b border-white/10 px-6 py-6"><p className="text-lg font-semibold tracking-tight">QurZaib Fabrics Admin</p><p className="mt-1 text-xs text-white/45">Commerce operations</p></div>
     <nav aria-label="Admin navigation" className="flex-1 space-y-1 px-3 py-5">{navigation.map(({ href, label, icon: Icon }) => { const active = href === "/admin" ? pathname === href : pathname.startsWith(href); return <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition ${active ? "bg-white/12 text-white" : "text-white/65 hover:bg-white/7 hover:text-white"}`}><Icon size={18}/>{label}</Link>; })}</nav>
     <div className="space-y-1 border-t border-white/10 p-3"><Link href="/" className="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm text-white/65 hover:bg-white/7 hover:text-white"><ExternalLink size={18}/>View store</Link><button type="button" onClick={logout} className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm text-white/65 hover:bg-white/7 hover:text-white"><LogOut size={18}/>Log out</button></div>
   </aside>;

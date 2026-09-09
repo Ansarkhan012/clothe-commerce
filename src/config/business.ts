@@ -1,18 +1,20 @@
+const publicBusinessValue = (value: string | undefined) => value?.trim() || null;
+
 export const businessConfig = {
   brandName: "QurZaib Fabrics",
   tagline: "Elegance Woven With Faith",
   country: "Pakistan",
   currency: "PKR",
-  supportEmail: null as string | null,
-  supportPhone: null as string | null,
-  whatsapp: null as string | null,
-  businessAddress: null as string | null,
+  supportEmail: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_EMAIL),
+  supportPhone: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_PHONE),
+  whatsapp: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_WHATSAPP),
+  businessAddress: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_ADDRESS),
   freeShippingThreshold: 5000,
   standardDeliveryCharge: 250,
   returnWindowDays: null as number | null,
-  shippingWindow: "OWNER_REVIEW_REQUIRED",
-  refundTimeline: "OWNER_REVIEW_REQUIRED",
-  disputeJurisdiction: "OWNER_REVIEW_REQUIRED",
+  shippingWindow: null as string | null,
+  refundTimeline: null as string | null,
+  disputeJurisdiction: null as string | null,
 } as const;
 
 export const pakistanProvinces = [

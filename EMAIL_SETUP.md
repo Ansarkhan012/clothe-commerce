@@ -1,4 +1,4 @@
-# Qurzaib Fabrics transactional email setup
+# QurZaib Fabrics transactional email setup
 
 Order confirmation and store-owner notification emails use Resend. All account, sender, recipient, reply-to, and website values are controlled through environment variables; client handoff requires no source changes.
 
@@ -9,7 +9,7 @@ Order confirmation and store-owner notification emails use Resend. All account, 
 
    ```env
    RESEND_API_KEY=re_xxxxxxxxx
-   EMAIL_FROM="Qurzaib Fabrics <onboarding@resend.dev>"
+   EMAIL_FROM="QurZaib Fabrics <onboarding@resend.dev>"
    ORDER_NOTIFICATION_EMAIL=your-test-email@example.com
    EMAIL_REPLY_TO=your-test-email@example.com
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -31,7 +31,7 @@ Order confirmation and store-owner notification emails use Resend. All account, 
 
    ```env
    RESEND_API_KEY=re_client_production_key
-   EMAIL_FROM="Qurzaib Fabrics <orders@clientdomain.com>"
+   EMAIL_FROM="QurZaib Fabrics <orders@clientdomain.com>"
    ORDER_NOTIFICATION_EMAIL=client-email@example.com
    EMAIL_REPLY_TO=client-email@example.com
    NEXT_PUBLIC_SITE_URL=https://clientdomain.com

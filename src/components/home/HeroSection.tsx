@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
  return <section className="relative min-h-[600px] w-full overflow-hidden sm:min-h-[680px] lg:min-h-[660px] lg:h-[calc(100svh-124px)] lg:max-h-[820px]">
-  <Image src="/images/home/hero-model1.png" alt="Model wearing an elegant printed Qurzaib Fabrics ensemble" fill priority sizes="100vw" className="object-cover object-[40%_center] sm:object-[56%_center] lg:object-center"/>
+  <Image src="/images/home/hero-model1.png" alt="Model wearing an elegant printed QurZaib Fabrics ensemble" fill priority sizes="100vw" className="object-cover object-[40%_center] sm:object-[56%_center] lg:object-center"/>
   <div className="absolute inset-0 bg-gradient-to-r from-brand-cream via-brand-cream/90 to-brand-cream/15 sm:from-brand-cream/95 sm:via-brand-cream/68 sm:to-transparent lg:from-brand-cream/90 lg:via-brand-cream/45" aria-hidden="true"/>
   <div className="relative z-10 mx-auto flex h-full min-h-[600px] w-full max-w-[1440px] items-center px-5 py-16 sm:min-h-[680px] sm:px-8 lg:min-h-[660px] lg:px-12 lg:py-12">
    <div className="max-w-[620px]">

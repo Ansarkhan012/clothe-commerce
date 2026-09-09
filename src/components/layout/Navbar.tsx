@@ -31,7 +31,7 @@ function BrandLockup({ compact = false }: { compact?: boolean }) {
     <span className={`relative block shrink-0 ${compact ? "h-[52px] w-[174px]" : "h-[58px] w-[186px] sm:h-[64px] sm:w-[205px] xl:w-[220px]"}`}>
       <Image
         src="/images/qurzaib-logo-display.png"
-        alt="Qurzaib Fabrics"
+        alt="QurZaib Fabrics"
         fill
         sizes={compact ? "174px" : "(max-width: 640px) 186px, (max-width: 1280px) 205px, 220px"}
         priority

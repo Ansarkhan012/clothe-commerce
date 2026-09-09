@@ -69,7 +69,7 @@ export default function CartPage() {
                   sizes="96px"
                   className="object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/home/hero-model.png';
+                    (e.target as HTMLImageElement).src = '/images/home/hero-model1.png';
                   }}
                 />
               </div>

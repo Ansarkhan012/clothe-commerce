@@ -18,8 +18,8 @@ export async function POST() {
     const { data, error } = await createEmailClient(config.apiKey).emails.send({
       from: config.from,
       to: config.adminRecipient,
-      subject: "Qurzaib Fabrics — transactional email test",
-      html: '<div style="background:#F7F3ED;padding:24px;font-family:Arial,sans-serif;color:#1A1A1A"><div style="max-width:560px;margin:auto;background:#FFFFFF;border:1px solid #E4DDD3;padding:32px"><h1 style="font-family:Georgia,serif;font-weight:normal">Qurzaib Fabrics</h1><p>Your transactional email configuration is working.</p></div></div>',
+      subject: "QurZaib Fabrics — transactional email test",
+      html: '<div style="background:#F7F3ED;padding:24px;font-family:Arial,sans-serif;color:#1A1A1A"><div style="max-width:560px;margin:auto;background:#FFFFFF;border:1px solid #E4DDD3;padding:32px"><h1 style="font-family:Georgia,serif;font-weight:normal">QurZaib Fabrics</h1><p>Your transactional email configuration is working.</p></div></div>',
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
     });
     if (error || !data?.id) {

@@ -16,7 +16,7 @@ export function sendOrderConfirmation(database: SupabaseClient, emailClient: Res
     recipient: order.email,
     from: config.from,
     replyTo: config.replyTo,
-    subject: `Order Confirmed — #${order.public_order_id} | Qurzaib Fabrics`,
+    subject: `Order Confirmed — #${order.public_order_id} | QurZaib Fabrics`,
     html: OrderConfirmationEmail(order, trackUrl),
   });
 }
