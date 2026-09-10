@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getSitemapProducts } from "@/src/lib/catalog";
 
+export const dynamic = "force-dynamic";
+
 const paths=["","/collections","/new-arrivals","/sale","/about","/contact","/track-order","/help-center","/shipping-policy","/return-exchange-policy","/refund-policy","/cancellation-policy","/privacy-policy","/terms-and-conditions","/cookies-policy","/disclaimer","/accessibility","/security-policy","/responsible-disclosure"];
 export default async function sitemap():Promise<MetadataRoute.Sitemap>{
  const configuredSiteUrl=process.env.NEXT_PUBLIC_SITE_URL?.trim();

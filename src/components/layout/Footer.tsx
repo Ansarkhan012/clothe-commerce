@@ -1,6 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Mail, MessageCircle, Phone } from "lucide-react";
 import CookiePreferencesLink from "@/src/components/common/CookiePreferencesLink";
+import {
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE,
+  BUSINESS_PHONE_TEL,
+  WHATSAPP_CONTACT_URL,
+  WHATSAPP_DISPLAY,
+} from "@/src/lib/contact";
 
 const groups = [
   {
@@ -71,7 +79,7 @@ export default function Footer() {
             meaningful occasions.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-x-7 gap-y-10 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-7 gap-y-10 sm:grid-cols-3 xl:grid-cols-5">
           {groups.map((group) => (
             <div key={group.title}>
               <h2 className="mb-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-gold">
@@ -91,6 +99,45 @@ export default function Footer() {
               </ul>
             </div>
           ))}
+          <div className="col-span-2 sm:col-span-1">
+            <h2 className="mb-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-gold">
+              Contact Us
+            </h2>
+            <ul className="space-y-4 text-sm text-white/70">
+              <li>
+                <a
+                  href={`mailto:${BUSINESS_EMAIL}`}
+                  className="flex items-start gap-2.5 transition hover:text-white focus-visible:text-white"
+                  aria-label={`Email QurZaib Fabrics at ${BUSINESS_EMAIL}`}
+                >
+                  <Mail aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
+                  <span className="break-all">{BUSINESS_EMAIL}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={BUSINESS_PHONE_TEL}
+                  className="flex items-center gap-2.5 transition hover:text-white focus-visible:text-white"
+                  aria-label={`Call QurZaib Fabrics at ${BUSINESS_PHONE}`}
+                >
+                  <Phone aria-hidden="true" className="shrink-0" size={16} />
+                  <span>{BUSINESS_PHONE}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={WHATSAPP_CONTACT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 transition hover:text-white focus-visible:text-white"
+                  aria-label={`Message QurZaib Fabrics on WhatsApp at ${WHATSAPP_DISPLAY}`}
+                >
+                  <MessageCircle aria-hidden="true" className="shrink-0" size={16} />
+                  <span>WhatsApp Us</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <div className="flex flex-col items-center justify-center gap-2 border-t border-white/10 px-5 py-5 text-center text-xs text-white/55 sm:flex-row sm:gap-5">

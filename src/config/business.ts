@@ -1,3 +1,9 @@
+import {
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE,
+  WHATSAPP_DISPLAY,
+} from "../lib/contact.ts";
+
 const publicBusinessValue = (value: string | undefined) => value?.trim() || null;
 
 export const businessConfig = {
@@ -5,9 +11,9 @@ export const businessConfig = {
   tagline: "Elegance Woven With Faith",
   country: "Pakistan",
   currency: "PKR",
-  supportEmail: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_EMAIL),
-  supportPhone: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_PHONE),
-  whatsapp: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_WHATSAPP),
+  supportEmail: BUSINESS_EMAIL,
+  supportPhone: BUSINESS_PHONE,
+  whatsapp: WHATSAPP_DISPLAY,
   businessAddress: publicBusinessValue(process.env.NEXT_PUBLIC_BUSINESS_ADDRESS),
   freeShippingThreshold: 5000,
   standardDeliveryCharge: 250,

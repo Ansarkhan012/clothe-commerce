@@ -23,13 +23,16 @@ test("customer source contains only the final brand and no development placehold
 
 test("business details are centralized in explicit public configuration", () => {
   const business = read("../src/config/business.ts");
+  const contactConfig = read("../src/lib/contact.ts");
   const contact = read("../src/app/contact/page.tsx");
   const environment = read("../.env.example");
-  for (const key of ["NEXT_PUBLIC_BUSINESS_EMAIL", "NEXT_PUBLIC_BUSINESS_PHONE", "NEXT_PUBLIC_BUSINESS_WHATSAPP", "NEXT_PUBLIC_BUSINESS_ADDRESS"]) {
-    assert.match(business, new RegExp(key));
-    assert.match(environment, new RegExp(key));
-  }
-  assert.match(contact, /Verified business contact details will be published after confirmation/);
+  assert.match(contactConfig, /qurzaibfabrics@gmail\.com/);
+  assert.match(contactConfig, /tel:\+923136696456/);
+  assert.match(contactConfig, /encodeURIComponent\(WHATSAPP_MESSAGE\)/);
+  assert.match(business, /BUSINESS_EMAIL/);
+  assert.match(contact, /WHATSAPP_CONTACT_URL/);
+  assert.match(environment, /NEXT_PUBLIC_BUSINESS_ADDRESS/);
+  assert.doesNotMatch(environment, /NEXT_PUBLIC_BUSINESS_(EMAIL|PHONE|WHATSAPP)/);
 });
 
 test("storefront product links use the canonical slug-or-id helper", () => {
@@ -47,7 +50,7 @@ test("storefront product links use the canonical slug-or-id helper", () => {
 test("track order uses shared storefront chrome without changing tracking logic", () => {
   const chrome = read("../src/components/layout/StorefrontChrome.tsx");
   const tracking = read("../src/app/track-order/page.tsx");
-  assert.match(chrome, /<Navbar \/>\{children\}<Newsletter \/><Footer \/>/);
+  assert.match(chrome, /<Navbar \/>\{children\}<Newsletter \/><Footer \/><FloatingWhatsAppButton \/>/);
   assert.doesNotMatch(chrome, /track-order/);
   assert.match(tracking, /fetch\("\/api\/orders\/track"/);
 });
