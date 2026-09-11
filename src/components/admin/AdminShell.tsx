@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { BarChart3, Boxes, ExternalLink, FolderTree, Layers3, LogOut, Menu, Package, Palette, Plus, Settings, ShoppingCart, X } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/Client";
@@ -33,11 +33,13 @@ function titleFor(pathname: string) {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   async function logout() {
     await createClient().auth.signOut();
-    window.location.assign("/admin-login");
+    router.push("/admin-login");
+    router.refresh();
   }
 
   const sidebar = <aside className="flex h-full w-64 flex-col bg-[#111111] text-white">

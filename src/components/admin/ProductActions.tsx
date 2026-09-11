@@ -43,13 +43,18 @@ export function ProductActions({ id, title }: { id: string; title: string }) {
     setError(null);
     try {
       const response = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
-      const result = await response.json() as { message?: string; referenced?: boolean };
+      const result = await response.json().catch(() => ({})) as { message?: string; referenced?: boolean };
       if (response.status === 409 && result.referenced) {
         setBlocked(true);
         setError(result.message ?? "This product belongs to order history and cannot be permanently deleted.");
         return;
       }
-      if (!response.ok) throw new Error(result.message ?? "Unable to delete product");
+      if (!response.ok) {
+        const fallback = response.status === 401 || response.status === 403
+          ? "Your admin session is no longer authorized. Please sign in again."
+          : "The product could not be deleted. Please try again.";
+        throw new Error(result.message ?? fallback);
+      }
       finish("deleted");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to delete product");

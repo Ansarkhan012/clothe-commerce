@@ -9,7 +9,6 @@ import {
   Menu,
   X,
   Search,
-  UserRound,
   Truck,
   CircleHelp,
 } from "lucide-react";
@@ -157,14 +156,6 @@ export function Navbar() {
             className="hidden h-10 w-10 place-items-center rounded-md transition hover:bg-brand-green-dark/5 hover:text-accent sm:grid"
           >
             <Search size={19} />
-          </Link>
-
-          <Link
-            href="/admin-login"
-            aria-label="Account"
-            className="hidden h-10 w-10 place-items-center rounded-md transition hover:bg-brand-green-dark/5 hover:text-accent sm:grid"
-          >
-            <UserRound size={19} />
           </Link>
 
           <Link

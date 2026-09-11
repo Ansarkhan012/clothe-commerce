@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { OrderActions } from "@/src/components/admin/OrderActions";
 
 type AdminOrder = { id:string; public_order_id:string; customer_name:string; email:string|null; phone_number:string; created_at:string; total_amount:number; payment_method:string; payment_status:string; order_status:string; items:unknown[] };
@@ -8,8 +9,9 @@ const statuses = ["", "pending", "confirmed", "processing", "packed", "ready_to_
 const paymentStatuses = ["", "pending", "unpaid", "paid", "failed", "refunded", "partially_refunded"];
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [orders,setOrders]=useState<AdminOrder[]>([]); const [count,setCount]=useState(0); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [message,setMessage]=useState(""); const [search,setSearch]=useState(""); const [status,setStatus]=useState(""); const [paymentStatus,setPaymentStatus]=useState(""); const [page,setPage]=useState(1);
-  const load=useCallback(async()=>{setLoading(true);setError("");try{const params=new URLSearchParams({page:String(page),search,status,paymentStatus});const response=await fetch(`/api/admin/orders?${params}`);if(response.status===401||response.status===403){window.location.assign("/admin-login");return;}if(!response.ok)throw new Error();const data=await response.json()as{orders:AdminOrder[];count:number};setOrders(data.orders);setCount(data.count);}catch{setError("Unable to load orders.");}finally{setLoading(false);}},[page,search,status,paymentStatus]);
+  const load=useCallback(async()=>{setLoading(true);setError("");try{const params=new URLSearchParams({page:String(page),search,status,paymentStatus});const response=await fetch(`/api/admin/orders?${params}`);if(response.status===401||response.status===403){router.push("/admin-login");return;}if(!response.ok)throw new Error();const data=await response.json()as{orders:AdminOrder[];count:number};setOrders(data.orders);setCount(data.count);}catch{setError("Unable to load orders.");}finally{setLoading(false);}},[page,search,status,paymentStatus,router]);
   useEffect(()=>{const timer=window.setTimeout(()=>void load(),250);return()=>window.clearTimeout(timer);},[load]);
   function removed(id:string){setOrders(current=>current.filter(order=>order.id!==id));setCount(current=>Math.max(0,current-1));setMessage("Order deleted successfully.")}
   return <main className="mx-auto max-w-[1500px]"><div className="mb-6 flex items-end justify-between gap-4"><div><h2 className="text-2xl font-semibold">Orders</h2><p className="mt-1 text-sm text-[#6B7280]">{count} matching orders</p></div><button type="button" onClick={()=>void load()} disabled={loading} aria-label="Refresh orders" className="grid h-10 w-10 place-items-center rounded-md border border-[#E5E7EB] bg-white disabled:opacity-50"><RefreshCw size={17}/></button></div>

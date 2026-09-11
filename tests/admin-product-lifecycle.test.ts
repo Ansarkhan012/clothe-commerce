@@ -8,15 +8,16 @@ const actions = read("../src/components/admin/ProductActions.tsx");
 const products = read("../src/app/admin/products/page.tsx");
 const checkout = read("../src/app/checkout/page.tsx");
 const layout = read("../src/app/layout.tsx");
+const securityMigration = read("../../supabase/migrations/202608310001_critical_security_fixes.sql");
 
-test("admin product deletion is privileged and checks all order history", () => {
+test("admin product deletion is privileged and relies on approved foreign-key behavior", () => {
   assert.match(route, /export async function DELETE/);
   assert.match(route, /requireAdmin\(\)/);
-  assert.match(route, /from\("order_items"\)[\s\S]*eq\("product_id", productId\)/);
-  assert.match(route, /from\("orders"\)[\s\S]*contains\("items", \[\{ product_id: productId \}\]\)/);
-  assert.match(route, /if \(await hasOrderHistory\(serviceClient, id\)\)/);
-  assert.equal((route.match(/hasOrderHistory\(serviceClient, id\)/g) ?? []).length, 2);
   assert.match(route, /from\("products"\)\.delete\(\)/);
+  assert.doesNotMatch(route, /hasOrderHistory|contains\("items"/);
+  assert.match(route, /deleteError\.code === "23503"/);
+  assert.doesNotMatch(route, /storage\.from|\.remove\(/);
+  assert.match(securityMigration, /product_id uuid references public\.products\(id\) on delete set null/i);
 });
 
 test("referenced products can be archived without a browser-side privileged client", () => {
@@ -34,6 +35,8 @@ test("delete UI confirms, handles focus, refreshes, and reports outcomes", () =>
   assert.match(actions, /cancelRef\.current\?\.focus\(\)/);
   assert.match(actions, /onCancel=/);
   assert.match(actions, /router\.refresh\(\)/);
+  assert.match(actions, /response\.json\(\)\.catch/);
+  assert.match(actions, /result\.message \?\? fallback/);
   assert.match(products, /Product deleted successfully/);
   assert.match(products, /Product archived and removed from the storefront/);
 });

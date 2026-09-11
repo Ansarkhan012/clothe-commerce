@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { Mail, MessageCircle, Phone, Send } from "lucide-react";
 import { businessConfig } from "@/src/config/business";
+import { FacebookIcon, InstagramIcon } from "@/src/components/contact/SocialIcons";
 import {
   BUSINESS_EMAIL,
   BUSINESS_PHONE,
   BUSINESS_PHONE_TEL,
+  BUSINESS_LANDLINE,
+  BUSINESS_LANDLINE_TEL,
   WHATSAPP_CONTACT_URL,
   WHATSAPP_DISPLAY,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
 } from "@/src/lib/contact";
 
 const emptyForm = { name: "", email: "", phone: "", subject: "", message: "" };
@@ -16,6 +21,7 @@ const emptyForm = { name: "", email: "", phone: "", subject: "", message: "" };
 const contactMethods = [
   { label: "Email", value: BUSINESS_EMAIL, href: `mailto:${BUSINESS_EMAIL}`, ariaLabel: `Email QurZaib Fabrics at ${BUSINESS_EMAIL}`, icon: Mail, external: false },
   { label: "Phone", value: BUSINESS_PHONE, href: BUSINESS_PHONE_TEL, ariaLabel: `Call QurZaib Fabrics at ${BUSINESS_PHONE}`, icon: Phone, external: false },
+  { label: "Landline", value: BUSINESS_LANDLINE, href: BUSINESS_LANDLINE_TEL, ariaLabel: `Call QurZaib Fabrics landline at ${BUSINESS_LANDLINE}`, icon: Phone, external: false },
   { label: "WhatsApp", value: WHATSAPP_DISPLAY, href: WHATSAPP_CONTACT_URL, ariaLabel: `Message QurZaib Fabrics on WhatsApp at ${WHATSAPP_DISPLAY}`, icon: MessageCircle, external: true },
 ] as const;
 
@@ -67,6 +73,17 @@ export default function ContactPage() {
             })}
           </ul>
           {businessConfig.businessAddress && <div className="mt-6 border-t border-border pt-5 text-sm"><p className="text-xs uppercase tracking-[0.14em] text-muted">Address</p><p className="mt-1 leading-6">{businessConfig.businessAddress}</p></div>}
+          <div className="mt-7 border-t border-border pt-6">
+            <h3 className="font-display text-xl text-brand-green-dark">Follow QurZaib Fabrics</h3>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="Follow QurZaib Fabrics on Facebook" className="flex min-h-12 items-center justify-center gap-2 border border-border bg-white px-3 text-sm font-semibold text-brand-green-dark transition hover:border-brand-gold focus-visible:border-brand-gold">
+                <FacebookIcon aria-hidden="true" className="size-[18px]" /> Facebook
+              </a>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Follow QurZaib Fabrics on Instagram" className="flex min-h-12 items-center justify-center gap-2 border border-border bg-white px-3 text-sm font-semibold text-brand-green-dark transition hover:border-brand-gold focus-visible:border-brand-gold">
+                <InstagramIcon aria-hidden="true" className="size-[18px]" /> Instagram
+              </a>
+            </div>
+          </div>
         </aside>
 
         <form onSubmit={submit} className="grid gap-5 border border-border bg-surface p-6 shadow-sm sm:grid-cols-2 sm:p-8">

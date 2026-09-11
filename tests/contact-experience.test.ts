@@ -9,8 +9,10 @@ test("direct customer contact links use one public contact module", () => {
   const footer = read("../src/components/layout/Footer.tsx");
   const contact = read("../src/app/contact/page.tsx");
   assert.match(config, /BUSINESS_EMAIL = "qurzaibfabrics@gmail\.com"/);
-  assert.match(config, /BUSINESS_PHONE = "03136696456"/);
+  assert.match(config, /BUSINESS_PHONE = "\+92 313 6696456"/);
   assert.match(config, /BUSINESS_PHONE_TEL = "tel:\+923136696456"/);
+  assert.match(config, /BUSINESS_LANDLINE = "021-34502918"/);
+  assert.match(config, /BUSINESS_LANDLINE_TEL = "tel:\+922134502918"/);
   assert.match(config, /WHATSAPP_NUMBER = "923136696456"/);
   assert.match(config, /Assalamualaikum, I would like to know more about QurZaib Fabrics\./);
   for (const source of [footer, contact]) {
@@ -31,8 +33,21 @@ test("WhatsApp links are accessible and open safely in a new tab", () => {
     assert.match(source, /target="_blank"|target=\{method\.external \? "_blank"/);
     assert.match(source, /noopener noreferrer/);
   }
-  assert.match(floating, /aria-label="Contact QurZaib Fabrics on WhatsApp"/);
+  assert.match(floating, /aria-label="Chat with QurZaib Fabrics on WhatsApp"/);
+  assert.match(floating, /WHATSAPP_CONTACT_URL/);
+  assert.match(floating, /WhatsAppIcon/);
+  assert.doesNotMatch(floating, /MessageCircle/);
   assert.match(floating, /safe-area-inset-bottom/);
+});
+
+test("landline is centralized and linked in footer and contact page", () => {
+  const footer = read("../src/components/layout/Footer.tsx");
+  const contact = read("../src/app/contact/page.tsx");
+  for (const source of [footer, contact]) {
+    assert.match(source, /BUSINESS_LANDLINE/);
+    assert.match(source, /BUSINESS_LANDLINE_TEL/);
+    assert.match(source, /Landline/);
+  }
 });
 
 test("floating WhatsApp access stays off admin routes and yields to cookie preferences", () => {
@@ -51,4 +66,23 @@ test("the existing support request submission remains connected", () => {
   assert.match(contact, /fetch\("\/api\/support"/);
   assert.match(contact, /body: JSON\.stringify\(form\)/);
   assert.match(contact, /onSubmit=\{submit\}/);
+});
+
+test("official social profiles are centralized and rendered accessibly", () => {
+  const config = read("../src/lib/contact.ts");
+  const icons = read("../src/components/contact/SocialIcons.tsx");
+  const footer = read("../src/components/layout/Footer.tsx");
+  const contact = read("../src/app/contact/page.tsx");
+  assert.match(config, /https:\/\/www\.facebook\.com\/profile\.php\?id=61594002553215/);
+  assert.match(config, /https:\/\/www\.instagram\.com\/qurzaibfabrics\?stkn=MW1vanBvOGl5NDYzcA==/);
+  assert.match(icons, /FacebookIcon/);
+  assert.match(icons, /InstagramIcon/);
+  for (const source of [footer, contact]) {
+    assert.match(source, /FACEBOOK_URL/);
+    assert.match(source, /INSTAGRAM_URL/);
+    assert.match(source, /Follow QurZaib Fabrics on Facebook/);
+    assert.match(source, /Follow QurZaib Fabrics on Instagram/);
+    assert.match(source, /target="_blank"/);
+    assert.match(source, /rel="noopener noreferrer"/);
+  }
 });

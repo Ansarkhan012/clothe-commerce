@@ -2,12 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import CookiePreferencesLink from "@/src/components/common/CookiePreferencesLink";
+import { FacebookIcon, InstagramIcon } from "@/src/components/contact/SocialIcons";
 import {
   BUSINESS_EMAIL,
   BUSINESS_PHONE,
   BUSINESS_PHONE_TEL,
+  BUSINESS_LANDLINE,
+  BUSINESS_LANDLINE_TEL,
   WHATSAPP_CONTACT_URL,
   WHATSAPP_DISPLAY,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
 } from "@/src/lib/contact";
 
 const groups = [
@@ -78,6 +83,19 @@ export default function Footer() {
             Thoughtfully curated Pakistani fabrics for timeless wardrobes and
             meaningful occasions.
           </p>
+          <div className="mt-7">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-gold">
+              Follow Us
+            </h2>
+            <div className="mt-3 flex gap-3">
+              <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="Follow QurZaib Fabrics on Facebook" className="grid size-11 place-items-center rounded-full border border-white/20 text-white/75 transition hover:border-brand-gold hover:bg-white/10 hover:text-brand-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold">
+                <FacebookIcon aria-hidden="true" className="size-[18px]" />
+              </a>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Follow QurZaib Fabrics on Instagram" className="grid size-11 place-items-center rounded-full border border-white/20 text-white/75 transition hover:border-brand-gold hover:bg-white/10 hover:text-brand-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold">
+                <InstagramIcon aria-hidden="true" className="size-[18px]" />
+              </a>
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-x-7 gap-y-10 sm:grid-cols-3 xl:grid-cols-5">
           {groups.map((group) => (
@@ -121,7 +139,17 @@ export default function Footer() {
                   aria-label={`Call QurZaib Fabrics at ${BUSINESS_PHONE}`}
                 >
                   <Phone aria-hidden="true" className="shrink-0" size={16} />
-                  <span>{BUSINESS_PHONE}</span>
+                  <span><span className="block text-[10px] uppercase tracking-wider text-white/45">Mobile</span>{BUSINESS_PHONE}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={BUSINESS_LANDLINE_TEL}
+                  className="flex items-center gap-2.5 transition hover:text-white focus-visible:text-white"
+                  aria-label={`Call QurZaib Fabrics landline at ${BUSINESS_LANDLINE}`}
+                >
+                  <Phone aria-hidden="true" className="shrink-0" size={16} />
+                  <span><span className="block text-[10px] uppercase tracking-wider text-white/45">Landline</span>{BUSINESS_LANDLINE}</span>
                 </a>
               </li>
               <li>
