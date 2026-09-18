@@ -29,7 +29,7 @@ test("RTW selection is required before Add to Cart",()=>assert.match(read("../sr
 test("color changes reset an invalid size",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/setColorId\(id\);setSize\(""\)/));
 test("out-of-stock sizes are disabled",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/stock_quantity\)<=0/));
 test("different variants generate different cart line keys",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/selected\?\.id\?\?"base"/));
-test("non-RTW products never render the size fieldset",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/type==="ready_to_wear"&&<fieldset/));
+test("non-RTW products never render the size controls",()=>assert.match(read("../src/components/product/ProductPurchasePanel.tsx"),/type==="ready_to_wear"&&<div className="mt-7"/));
 test("checkout preserves variant IDs and decimal quantities",()=>{const checkout=read("../src/app/checkout/page.tsx");assert.match(checkout,/variant_id:variantId\?\?null/);assert.match(checkout,/quantity/)});
 test("public catalog excludes inactive and draft products",()=>{const catalog=read("../src/lib/catalog.ts");assert.match(catalog,/eq\("is_active", true\)\.eq\("status", "active"\)/);assert.match(catalog,/\.is_active === true/)});
 test("product metadata uses SEO fields and canonical slug",()=>{const page=read("../src/app/product/[id]/page.tsx");assert.match(page,/seo_title\?\?product\.title/);assert.match(page,/seo_description\?\?product\.short_description/);assert.match(page,/alternates:\{canonical\}/)});

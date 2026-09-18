@@ -45,13 +45,18 @@ export function normalizeVariantsForType(type: ProductType, variants: EditorVari
   }));
 }
 
-export function normalizeDetailsForType(type: ProductType, details: EditorDetails): EditorDetails {
+export function serializeWritableProductDetails(type: ProductType, details: EditorDetails): EditorDetails {
   const common = {
     fabric: details.fabric,
     work_type: details.work_type,
     care_instructions: details.care_instructions,
   };
-  if (type === "ready_to_wear") return { ...common, garment_type: details.garment_type };
+  if (type === "ready_to_wear") return {
+    ...common,
+    garment_type: details.garment_type,
+    shirt: details.shirt,
+    trouser: details.trouser,
+  };
   if (type === "unstitched") return {
     ...common,
     pieces: details.pieces,
@@ -73,6 +78,10 @@ export function normalizeDetailsForType(type: ProductType, details: EditorDetail
     length: details.length,
     width: details.width,
   };
+}
+
+export function normalizeDetailsForType(type: ProductType, details: EditorDetails): EditorDetails {
+  return serializeWritableProductDetails(type, details);
 }
 
 export const subcategoriesForCategory = (categories: CatalogCategory[], categoryId: string | null) =>

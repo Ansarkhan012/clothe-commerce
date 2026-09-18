@@ -3,6 +3,11 @@ import { z } from "zod";
 const optionalText = z.string().trim().max(500).optional().nullable();
 const money = z.number().nonnegative().max(99_999_999);
 const uuid = z.string().uuid();
+const garmentSize = z.enum(["XS","S","M","L","XL","XXL"]);
+const measurementKey = z.enum(["shoulder","chest","waist","hip","sleeve_length","armhole","shirt_length","daman","trouser_length","waist_belt","thigh","bottom_hem"]);
+const garmentPart = z.object({
+  size_guide: z.partialRecord(garmentSize, z.partialRecord(measurementKey, z.number().positive().max(200))).optional(),
+}).passthrough().nullable().optional();
 
 export const ProductVariantSchema = z.object({
   id: uuid.optional(), color_id: uuid.nullable(), size: z.enum(["XS","S","M","L","XL","XXL"]).nullable(),
@@ -23,7 +28,7 @@ const ProductBaseSchema = z.object({
 
 export const ProductInputSchema = z.discriminatedUnion("product_type", [
   ProductBaseSchema.extend({product_type:z.literal("unstitched"),details:z.object({pieces:z.number().int().min(1).max(3),fabric:optionalText,work_type:optionalText,season:optionalText,shirt:z.record(z.string(),z.unknown()).optional(),trouser:z.record(z.string(),z.unknown()).optional(),dupatta:z.record(z.string(),z.unknown()).optional()}).passthrough()}),
-  ProductBaseSchema.extend({product_type:z.literal("ready_to_wear"),stock:z.literal(0),details:z.object({garment_type:z.string().trim().min(1),fabric:z.string().trim().min(1),work_type:optionalText}).passthrough()}).refine(v=>v.variants.length>0,{message:"Ready to wear requires at least one variant",path:["variants"]}),
+  ProductBaseSchema.extend({product_type:z.literal("ready_to_wear"),stock:z.literal(0),details:z.object({garment_type:z.string().trim().min(1),fabric:z.string().trim().min(1),work_type:optionalText,shirt:garmentPart,trouser:garmentPart}).passthrough()}).refine(v=>v.variants.length>0,{message:"Ready to wear requires at least one variant",path:["variants"]}),
   ProductBaseSchema.extend({product_type:z.literal("loose_fabric"),variants:z.array(ProductVariantSchema).max(0),details:z.object({fabric:z.string().trim().min(1),work_type:optionalText,selling_unit:z.enum(["meter","yard"]),width:z.number().positive(),minimum_quantity:z.number().positive(),quantity_step:z.number().positive()}).passthrough()}),
   ProductBaseSchema.extend({product_type:z.literal("dupatta"),details:z.object({fabric:z.string().trim().min(1),work_type:optionalText,length:z.number().positive(),width:z.number().positive()}).passthrough()}),
   ProductBaseSchema.extend({product_type:z.literal("shawl"),details:z.object({fabric:z.string().trim().min(1),work_type:optionalText,season:optionalText,length:z.number().positive(),width:z.number().positive()}).passthrough()}),

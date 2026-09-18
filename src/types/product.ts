@@ -9,13 +9,15 @@ export interface CatalogCollection { id:string; name:string; slug:string; descri
 export interface CatalogColor { id:string; name:string; slug:string; hex_code:string|null; sort_order:number; is_active:boolean }
 export interface ProductVariant { id:string; product_id:string; color_id:string|null; size:GarmentSize|null; sku:string; stock_quantity:number; price_override:number|null; image_url:string|null; is_active:boolean; color?:CatalogColor|null }
 export interface PieceDetail { included:boolean; fabric?:string; length?:number; width?:number }
+export type GarmentMeasurementValues = Partial<Record<"shoulder"|"chest"|"waist"|"hip"|"sleeve_length"|"armhole"|"shirt_length"|"daman"|"trouser_length"|"waist_belt"|"thigh"|"bottom_hem",number>>;
+export type GarmentMeasurementMap = Partial<Record<GarmentSize,GarmentMeasurementValues>>;
+export interface ProductPartDetail extends PieceDetail { size_guide?:GarmentMeasurementMap }
 export interface ProductDetails {
   pieces:number|null; fabric:string|null; garment_type:string|null; work_type:string|null; season:string|null;
   selling_unit:FabricUnit|null; width:number|null; length:number|null; minimum_quantity:number|null;
-  quantity_step:number|null; care_instructions:string|null; shirt:PieceDetail|null; trouser:PieceDetail|null; dupatta:PieceDetail|null;
+  quantity_step:number|null; care_instructions:string|null; shirt:ProductPartDetail|null; trouser:ProductPartDetail|null; dupatta:PieceDetail|null;
 }
 
 export const productTypeLabels:Record<ProductType,string> = {
   unstitched:"Unstitched Suit", ready_to_wear:"Ready to Wear", loose_fabric:"Loose Fabric", dupatta:"Dupatta", shawl:"Shawl",
 };
-

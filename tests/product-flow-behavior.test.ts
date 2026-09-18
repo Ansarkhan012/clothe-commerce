@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { initializeEditorDetails, normalizeDetailsForType, normalizeVariantsForType, subcategoriesForCategory, updatePieceDetail } from "../src/lib/admin/product-editor-state.ts";
+import { initializeEditorDetails, normalizeDetailsForType, normalizeVariantsForType, serializeWritableProductDetails, subcategoriesForCategory, updatePieceDetail } from "../src/lib/admin/product-editor-state.ts";
 import { sanitizePersistedCart } from "../src/lib/cart-persistence.ts";
 import { activeVariants, productInventory, resolveProductVariant } from "../src/lib/product-commerce.ts";
 
@@ -59,6 +59,24 @@ test("editor type normalization preserves relevant state and variant IDs",()=>{
   const details=normalizeDetailsForType("unstitched",{garment_type:"Kurta",pieces:3,shirt:{included:true},selling_unit:"meter"});
   assert.equal(details.garment_type,undefined);
   assert.deepEqual(details.shirt,{included:true});
+});
+
+test("every product type strips read-only detail metadata without losing writable fields",()=>{
+  const metadata={product_id:productId,created_at:"2026-09-01",updated_at:"2026-09-18"};
+  const cases=[
+    ["ready_to_wear",{...metadata,fabric:"Lawn",work_type:"Embroidered",care_instructions:"Dry clean",garment_type:"Kurta",shirt:{size_guide:{M:{chest:21}}},trouser:{size_guide:{M:{trouser_length:38}}}},["fabric","work_type","care_instructions","garment_type","shirt","trouser"]],
+    ["unstitched",{...metadata,fabric:"Lawn",work_type:"Printed",care_instructions:"Cold wash",pieces:3,season:"Summer",shirt:{included:true},trouser:{included:true},dupatta:{included:true}},["fabric","work_type","care_instructions","pieces","season","shirt","trouser","dupatta"]],
+    ["loose_fabric",{...metadata,fabric:"Cotton",work_type:"Plain",care_instructions:"Cold wash",selling_unit:"meter",width:42,minimum_quantity:1,quantity_step:.5},["fabric","work_type","care_instructions","selling_unit","width","minimum_quantity","quantity_step"]],
+    ["dupatta",{...metadata,fabric:"Chiffon",work_type:"Embroidered",care_instructions:"Dry clean",length:2.5,width:1.1},["fabric","work_type","care_instructions","length","width"]],
+    ["shawl",{...metadata,fabric:"Wool",work_type:"Woven",care_instructions:"Dry clean",season:"Winter",length:2.5,width:1.2},["fabric","work_type","care_instructions","season","length","width"]],
+  ] as const;
+  for(const [type,loaded,keys] of cases){
+    const serialized=serializeWritableProductDetails(type,loaded);
+    assert.equal("product_id" in serialized,false);
+    assert.equal("created_at" in serialized,false);
+    assert.equal("updated_at" in serialized,false);
+    for(const key of keys)assert.deepEqual(serialized[key],(loaded as Record<string,unknown>)[key]);
+  }
 });
 
 test("subcategory choices are scoped to their selected parent",()=>{
