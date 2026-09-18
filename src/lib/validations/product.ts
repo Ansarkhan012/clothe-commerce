@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_PRODUCT_IMAGES } from "../product-images.ts";
 
 const optionalText = z.string().trim().max(500).optional().nullable();
 const money = z.number().nonnegative().max(99_999_999);
@@ -20,7 +21,7 @@ const ProductBaseSchema = z.object({
   short_description:optionalText, description:z.string().trim().max(5000).optional().nullable(), category_id:uuid.nullable(),
   subcategory_id:uuid.nullable(), collection_ids:z.array(uuid).max(20), price:money.positive(), sale_price:money.nullable(),
   compare_at_price:money.nullable(), base_sku:z.string().trim().max(100).optional().nullable(), primary_color_id:uuid.nullable(),
-  additional_color_ids:z.array(uuid).max(20), images:z.array(z.string().url()).min(1).max(10), featured:z.boolean(),
+  additional_color_ids:z.array(uuid).max(20), images:z.array(z.string().url()).min(1).max(MAX_PRODUCT_IMAGES), featured:z.boolean(),
   is_new:z.boolean(), status:z.enum(["draft","active","archived"]), is_active:z.boolean(), seo_title:z.string().max(70).optional().nullable(),
   seo_description:z.string().max(170).optional().nullable(), stock:z.number().nonnegative(), variants:z.array(ProductVariantSchema).max(300),
   details:z.record(z.string(),z.unknown()),

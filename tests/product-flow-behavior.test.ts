@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { initializeEditorDetails, normalizeDetailsForType, normalizeVariantsForType, serializeWritableProductDetails, subcategoriesForCategory, updatePieceDetail } from "../src/lib/admin/product-editor-state.ts";
+import { initializeEditorDetails, normalizeDetailsForType, normalizeVariantsForType, serializeWritableProductDetails, serializeWritableProductVariants, subcategoriesForCategory, updatePieceDetail } from "../src/lib/admin/product-editor-state.ts";
 import { sanitizePersistedCart } from "../src/lib/cart-persistence.ts";
 import { activeVariants, productInventory, resolveProductVariant } from "../src/lib/product-commerce.ts";
 
@@ -77,6 +77,22 @@ test("every product type strips read-only detail metadata without losing writabl
     assert.equal("updated_at" in serialized,false);
     for(const key of keys)assert.deepEqual(serialized[key],(loaded as Record<string,unknown>)[key]);
   }
+});
+
+test("edit variant serialization strips DB metadata for every variant-backed product type",()=>{
+  const loaded={...variants[0],created_at:"2026-09-01",updated_at:"2026-09-18"};
+  for(const type of ["ready_to_wear","unstitched","dupatta","shawl"] as const){
+    const result=serializeWritableProductVariants(type,[loaded]);
+    assert.equal(result.length,1);
+    assert.equal("product_id" in result[0],false);
+    assert.equal("created_at" in result[0],false);
+    assert.equal("updated_at" in result[0],false);
+    assert.equal(result[0].id,loaded.id);
+    assert.equal(result[0].sku,loaded.sku);
+    assert.equal(result[0].stock_quantity,loaded.stock_quantity);
+    assert.equal(result[0].size,type==="ready_to_wear"?loaded.size:null);
+  }
+  assert.deepEqual(serializeWritableProductVariants("loose_fabric",[loaded]),[]);
 });
 
 test("subcategory choices are scoped to their selected parent",()=>{

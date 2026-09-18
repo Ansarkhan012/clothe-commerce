@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { normalizeDetailsForType, serializeWritableProductDetails } from "../src/lib/admin/product-editor-state.ts";
+import { normalizeDetailsForType, serializeWritableProductDetails, serializeWritableProductVariants } from "../src/lib/admin/product-editor-state.ts";
 import { ProductInputSchema } from "../src/lib/validations/product.ts";
 import { hasGarmentSizeGuide, hasMeasurementsForSize, readGarmentSizeGuide, updateGarmentMeasurement } from "../src/lib/size-guide.ts";
 
@@ -64,6 +64,36 @@ test("edit serialization removes database metadata and preserves RTW size guides
   assert.equal(ProductInputSchema.safeParse({...product,details}).success,true);
 });
 
+test("actual edit read shape is serialized before strict product validation", () => {
+  const loadedDetails={
+    product_id:"b9567753-2d38-4091-bbc7-bfaccb46c833",created_at:"2026-09-01T00:00:00Z",updated_at:"2026-09-18T00:00:00Z",
+    garment_type:"3-Piece Suit",fabric:"Lawn",work_type:"Printed",care_instructions:"Dry clean",
+    shirt:{size_guide:{L:{chest:22.5}}},trouser:{size_guide:{L:{trouser_length:39}}},
+  };
+  const loadedVariant={
+    ...variant,product_id:"b9567753-2d38-4091-bbc7-bfaccb46c833",created_at:"2026-09-01T00:00:00Z",updated_at:"2026-09-18T00:00:00Z",
+  };
+  const rawResult=ProductInputSchema.safeParse({...product,details:loadedDetails,variants:[loadedVariant]});
+  assert.equal(rawResult.success,false);
+  if(!rawResult.success){
+    const issue=rawResult.error.issues.find(item=>item.code==="unrecognized_keys");
+    assert.deepEqual(issue?.path,["variants",0]);
+    assert.deepEqual(issue&&"keys" in issue?[...issue.keys].sort():[],["created_at","product_id","updated_at"]);
+  }
+  const details=serializeWritableProductDetails("ready_to_wear",loadedDetails);
+  const variants=serializeWritableProductVariants("ready_to_wear",[loadedVariant]);
+  for(const key of ["product_id","created_at","updated_at"]){
+    assert.equal(key in details,false);
+    assert.equal(key in variants[0],false);
+  }
+  assert.equal(variants[0].id,loadedVariant.id);
+  assert.equal(variants[0].sku,loadedVariant.sku);
+  assert.equal(variants[0].stock_quantity,loadedVariant.stock_quantity);
+  assert.equal(readGarmentSizeGuide(details).shirt.L?.chest,22.5);
+  assert.equal(readGarmentSizeGuide(details).trouser.L?.trouser_length,39);
+  assert.equal(ProductInputSchema.safeParse({...product,details,variants}).success,true);
+});
+
 test("empty RTW guide stays valid while unrelated product details remain unaffected", () => {
   assert.equal(hasGarmentSizeGuide(readGarmentSizeGuide(product.details)),false);
   const unstitched = normalizeDetailsForType("unstitched",{pieces:3,fabric:"Lawn",shirt:{included:true}});
@@ -89,6 +119,8 @@ test("add and edit flows persist and reload measurements through existing produc
   const migration = read("../../supabase/migrations/202609040004_product_domain_architecture.sql");
   assert.match(editor,/writableDetails=serializeWritableProductDetails\(type,\{\.\.\.details/);
   assert.match(editor,/details:writableDetails/);
+  assert.match(editor,/writableVariants=serializeWritableProductVariants\(type,variants\)/);
+  assert.match(editor,/variants:writableVariants/);
   assert.match(create,/p_product: parsed\.data/);
   assert.match(update,/p_product: parsed\.data/);
   assert.match(editPage,/details:product_details\(\*\)/);

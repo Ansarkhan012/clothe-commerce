@@ -45,6 +45,20 @@ export function normalizeVariantsForType(type: ProductType, variants: EditorVari
   }));
 }
 
+export function serializeWritableProductVariants(type: ProductType, variants: EditorVariant[]): EditorVariant[] {
+  if (type === "loose_fabric") return [];
+  return variants.map((variant) => ({
+    ...(variant.id ? { id: variant.id } : {}),
+    color_id: variant.color_id ?? null,
+    size: type === "ready_to_wear" ? (variant.size ?? "S") : null,
+    sku: variant.sku,
+    stock_quantity: variant.stock_quantity,
+    price_override: variant.price_override ?? null,
+    image_url: variant.image_url ?? null,
+    is_active: variant.is_active,
+  }));
+}
+
 export function serializeWritableProductDetails(type: ProductType, details: EditorDetails): EditorDetails {
   const common = {
     fabric: details.fabric,
