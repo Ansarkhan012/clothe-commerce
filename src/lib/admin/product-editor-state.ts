@@ -1,4 +1,5 @@
 import type { CatalogCategory, ProductType } from "@/src/types/product";
+import { serializeOptionalGarmentPart } from "../size-guide.ts";
 
 export type EditorVariant = {
   id?: string;
@@ -65,12 +66,16 @@ export function serializeWritableProductDetails(type: ProductType, details: Edit
     work_type: details.work_type,
     care_instructions: details.care_instructions,
   };
-  if (type === "ready_to_wear") return {
-    ...common,
-    garment_type: details.garment_type,
-    shirt: details.shirt,
-    trouser: details.trouser,
-  };
+  if (type === "ready_to_wear") {
+    const shirt = serializeOptionalGarmentPart(details.shirt);
+    const trouser = serializeOptionalGarmentPart(details.trouser);
+    return {
+      ...common,
+      garment_type: details.garment_type,
+      ...(shirt ? { shirt } : {}),
+      ...(trouser ? { trouser } : {}),
+    };
+  }
   if (type === "unstitched") return {
     ...common,
     pieces: details.pieces,

@@ -5,6 +5,7 @@ import test from "node:test";
 import { initializeEditorDetails, normalizeDetailsForType, normalizeVariantsForType, serializeWritableProductDetails, serializeWritableProductVariants, subcategoriesForCategory, updatePieceDetail } from "../src/lib/admin/product-editor-state.ts";
 import { sanitizePersistedCart } from "../src/lib/cart-persistence.ts";
 import { activeVariants, productInventory, resolveProductVariant } from "../src/lib/product-commerce.ts";
+import { ProductInputSchema } from "../src/lib/validations/product.ts";
 
 const productId = "351400bf-6c57-4500-ada4-d4e22495eb65";
 const ivory = "a906f14f-6b0f-4fc7-be76-7b7193cbd295";
@@ -93,6 +94,26 @@ test("edit variant serialization strips DB metadata for every variant-backed pro
     assert.equal(result[0].size,type==="ready_to_wear"?loaded.size:null);
   }
   assert.deepEqual(serializeWritableProductVariants("loose_fabric",[loaded]),[]);
+});
+
+test("all five product types retain Add-to-Edit validation parity",()=>{
+  const base={title:"Round Trip Product",slug:"round-trip-product",short_description:null,description:null,category_id:null,subcategory_id:null,collection_ids:[],price:2500,sale_price:null,compare_at_price:null,base_sku:null,primary_color_id:null,additional_color_ids:[],images:["https://example.com/product.jpg"],featured:false,is_new:false,status:"active" as const,is_active:true,seo_title:null,seo_description:null};
+  const writableVariant=serializeWritableProductVariants("ready_to_wear",[variants[0]])[0];
+  const cases=[
+    {product_type:"ready_to_wear" as const,stock:0,details:{garment_type:"Kurti",fabric:"Lawn",shirt:{size_guide:{M:{chest:21}}}},variants:[writableVariant]},
+    {product_type:"unstitched" as const,stock:4,details:{pieces:3,fabric:"Lawn",season:"Summer",shirt:{included:true}},variants:[{...writableVariant,size:null}]},
+    {product_type:"loose_fabric" as const,stock:4.5,details:{fabric:"Cotton",selling_unit:"meter",width:42,minimum_quantity:1,quantity_step:.5},variants:[]},
+    {product_type:"dupatta" as const,stock:3,details:{fabric:"Chiffon",length:2.5,width:1.1},variants:[{...writableVariant,size:null}]},
+    {product_type:"shawl" as const,stock:2,details:{fabric:"Wool",season:"Winter",length:2.5,width:1.2},variants:[{...writableVariant,size:null}]},
+  ];
+  for(const input of cases){
+    const add={...base,...input};
+    assert.equal(ProductInputSchema.safeParse(add).success,true,`${input.product_type} Add payload`);
+    const dbDetails={...input.details,product_id:productId,created_at:"2026-09-01",updated_at:"2026-09-18"};
+    const dbVariants=input.variants.map(row=>({...row,product_id:productId,created_at:"2026-09-01",updated_at:"2026-09-18"}));
+    const edit={...add,details:serializeWritableProductDetails(input.product_type,dbDetails),variants:serializeWritableProductVariants(input.product_type,dbVariants)};
+    assert.equal(ProductInputSchema.safeParse(edit).success,true,`${input.product_type} Edit payload`);
+  }
 });
 
 test("subcategory choices are scoped to their selected parent",()=>{

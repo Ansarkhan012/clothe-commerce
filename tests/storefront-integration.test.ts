@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { activeVariants, effectiveProductPrice, isValidMeasuredQuantity, productHref, productInventory } from "../src/lib/product-commerce.ts";
+import { activeVariants, effectiveProductPrice, isValidMeasuredQuantity, productHref, productInventory, stockStatus } from "../src/lib/product-commerce.ts";
 import type { Product } from "../src/types/supabase.ts";
 
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
@@ -17,7 +17,27 @@ test("admin inventory sums unstitched color variants",()=>assert.equal(productIn
 test("admin inventory sums dupatta color variants",()=>assert.equal(productInventory({...base,product_type:"dupatta",stock:0,variants:[variant("d",null,4)]}),4));
 test("admin inventory sums shawl color variants",()=>assert.equal(productInventory({...base,product_type:"shawl",stock:0,variants:[variant("s",null,7)]}),7));
 test("admin inventory ignores inactive variants",()=>assert.equal(productInventory({...base,stock:2,variants:[variant("i",null,99,false)]}),2));
-test("admin products list reuses shared inventory and preserves loose-fabric decimal stock",()=>{const admin=read("../src/app/admin/products/page.tsx");assert.match(admin,/productInventory\(product\)/);assert.match(admin,/product_type==="loose_fabric"\?Number\(product\.stock\)/);assert.match(admin,/inventory<=0\?"Sold out":inventory<=5\?"Low stock"/)});
+test("stock classification is exact and excludes sold out from low stock",()=>{
+  assert.deepEqual([5,4,3,2,1,0].map(stockStatus),["in_stock","in_stock","in_stock","in_stock","low_stock","out_of_stock"]);
+});
+test("variant and base inventory use the same stock classification",()=>{
+  assert.equal(stockStatus(productInventory({...base,stock:99,variants:[variant("one",null,1)]})),"low_stock");
+  assert.equal(stockStatus(productInventory({...base,stock:2,variants:[]})),"in_stock");
+  assert.equal(stockStatus(productInventory({...base,stock:0,variants:[]})),"out_of_stock");
+});
+test("admin and storefront surfaces use shared stock classification",()=>{
+  for(const path of ["../src/app/admin/products/page.tsx","../src/app/admin/inventory/page.tsx","../src/app/admin/page.tsx","../src/components/common/ProductCard.tsx"])assert.match(read(path),/stockStatus\(/);
+  const admin=read("../src/app/admin/products/page.tsx");assert.match(admin,/productInventory\(product\)/);assert.match(admin,/product_type==="loose_fabric"\?Number\(product\.stock\)/);
+});
+test("dashboard SQL keeps inventory authority and counts only exactly one",()=>{
+  const sql=read("../../supabase/migrations/202609200001_low_stock_exactly_one.sql");
+  assert.match(sql,/exists\(select 1 from public\.product_variants/);
+  assert.match(sql,/sum\(v\.stock_quantity\)/);
+  assert.match(sql,/else p\.stock/);
+  assert.match(sql,/end = 1/);
+  assert.match(sql,/security definer set search_path=public,pg_temp/);
+  assert.match(sql,/grant execute .* service_role/);
+});
 test("valid sale price renders as effective price",()=>assert.equal(effectiveProductPrice({...base,sale_price:800}),800));
 test("invalid sale price falls back to regular price",()=>assert.equal(effectiveProductPrice({...base,sale_price:1200}),1000));
 test("canonical product link uses slug",()=>assert.equal(productHref(base),"/product/test-product"));

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { requireAdmin } from "@/src/lib/auth/admin";
-import { productInventory } from "@/src/lib/product-commerce";
+import { productInventory, stockStatus } from "@/src/lib/product-commerce";
 import { productTypeLabels, productTypes, type ProductType } from "@/src/types/product";
 import { ProductActions } from "@/src/components/admin/ProductActions";
 
@@ -32,7 +32,7 @@ export default async function ProductsPage({searchParams}:{searchParams:Promise<
    const activeVariantCount=(product.variants??[]).filter(variant=>variant.is_active).length;
    const categoryRecord=Array.isArray(product.category_record)?product.category_record[0]:product.category_record;
    const inventoryText=product.product_type==="loose_fabric"?`${inventory.toLocaleString("en-PK")} m available`:activeVariantCount?`${inventory.toLocaleString("en-PK")} across ${activeVariantCount} active variants`:`${inventory.toLocaleString("en-PK")} in stock`;
-   const inventoryStatus=inventory<=0?"Sold out":inventory<=5?"Low stock":null;
+   const status=stockStatus(inventory);const inventoryStatus=status==="out_of_stock"?"Sold out":status==="low_stock"?"Low stock":null;
    return <tr key={product.id}><td className="px-5 py-3"><div className="flex items-center gap-3"><div className="relative h-12 w-10 bg-[#F6F7F9]">{product.images?.[0]&&<Image src={product.images[0]} alt="" fill sizes="40px" className="object-cover"/>}</div><span className="max-w-xs truncate font-medium">{product.title}</span></div></td><td className="px-5 py-3">{productTypeLabels[product.product_type as ProductType]}</td><td className="px-5 py-3 text-[#6B7280]">{categoryRecord?.name??"—"}</td><td className="px-5 py-3">Rs. {Number(product.sale_price??product.price).toLocaleString("en-PK")}</td><td className="px-5 py-3"><span>{inventoryText}</span>{inventoryStatus&&<span className={`ml-2 rounded-full px-2 py-1 text-xs ${inventory<=0?"bg-red-50 text-red-700":"bg-amber-50 text-amber-800"}`}>{inventoryStatus}</span>}</td><td className="px-5 py-3"><span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs">{product.is_active?product.status:"Inactive"}</span></td><td className="px-5 py-3 text-[#6B7280]">{new Date(product.updated_at).toLocaleDateString("en-PK")}</td><td className="px-5 py-3"><ProductActions id={product.id} title={product.title}/></td></tr>
   })}</tbody></table>{!products?.length&&<p className="p-10 text-center text-sm text-[#6B7280]">No products match.</p>}</div>
   <div className="mt-5 flex justify-between"><Link href={page===1?href(1):href(page-1)} className={`rounded border px-4 py-2 ${page===1?"pointer-events-none opacity-40":""}`}>Previous</Link><span>Page {page}</span><Link href={page*pageSize>=(count??0)?href(page):href(page+1)} className={`rounded border px-4 py-2 ${page*pageSize>=(count??0)?"pointer-events-none opacity-40":""}`}>Next</Link></div>

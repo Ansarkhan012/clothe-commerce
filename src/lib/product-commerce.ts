@@ -11,6 +11,11 @@ export const productInventory = <T extends { stock: number; variants?: Array<Pic
     : Math.max(0, Number(product.stock));
 };
 
+export const LOW_STOCK_QUANTITY = 1;
+export type StockStatus = "out_of_stock" | "low_stock" | "in_stock";
+export const stockStatus = (stock: number): StockStatus =>
+  stock <= 0 ? "out_of_stock" : stock === LOW_STOCK_QUANTITY ? "low_stock" : "in_stock";
+
 export function resolveProductVariant<T extends Pick<ProductVariant, "color_id" | "size">>(
   variants: T[],
   productType: ProductType,

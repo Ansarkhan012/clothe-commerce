@@ -13,7 +13,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const parsed = ProductInputSchema.safeParse(await request.json());
     if (!parsed.success) {
       const issues = parsed.error.flatten().fieldErrors;
-      return Response.json({ message: issues.variants?.[0] ?? "Invalid product", issues }, { status: 400 });
+      return Response.json({ message: parsed.error.issues[0]?.message ?? "Invalid product", issues }, { status: 400 });
     }
     const { serviceClient } = await requireAdmin();
     const { data, error } = await serviceClient.rpc("save_product", { p_product: parsed.data, p_product_id: id });

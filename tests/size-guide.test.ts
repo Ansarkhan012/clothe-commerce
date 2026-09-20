@@ -22,6 +22,44 @@ test("RTW measurements are optional and decimal values validate", () => {
   assert.equal(ProductInputSchema.safeParse(measured).success, true);
 });
 
+test("shirt and trouser measurement sections are independently optional", () => {
+  const cases = [
+    { shirt:{size_guide:{M:{chest:21}}} },
+    { trouser:{size_guide:{M:{trouser_length:38}}} },
+    { shirt:{size_guide:{M:{chest:21}}},trouser:{size_guide:{M:{trouser_length:38}}} },
+    {},
+  ];
+  for (const sections of cases) {
+    const details=serializeWritableProductDetails("ready_to_wear",{...product.details,...sections});
+    assert.equal(ProductInputSchema.safeParse({...product,details}).success,true);
+  }
+});
+
+test("blank measurement shells are omitted without hiding partially invalid input", () => {
+  for (const blank of [{},{size_guide:{}},{size_guide:{M:{}}},{size_guide:{M:{chest:"",shirt_length:null}}}]) {
+    const details=serializeWritableProductDetails("ready_to_wear",{...product.details,shirt:blank,trouser:blank});
+    assert.equal("shirt" in details,false);
+    assert.equal("trouser" in details,false);
+    assert.equal(ProductInputSchema.safeParse({...product,details}).success,true);
+  }
+  const details=serializeWritableProductDetails("ready_to_wear",{...product.details,shirt:{size_guide:{M:{chest:21,shirt_length:"invalid"}}}});
+  assert.deepEqual(details.shirt,{size_guide:{M:{chest:21,shirt_length:"invalid"}}});
+  assert.equal(ProductInputSchema.safeParse({...product,details}).success,false);
+});
+
+test("RTW add-edit round trips support adding and removing trouser measurements", () => {
+  const dbMetadata={product_id:"b9567753-2d38-4091-bbc7-bfaccb46c833",created_at:"2026-09-01",updated_at:"2026-09-18"};
+  const kurti=serializeWritableProductDetails("ready_to_wear",{...dbMetadata,...product.details,shirt:{size_guide:{M:{chest:21}}},trouser:{size_guide:{M:{trouser_length:""}}}});
+  assert.equal(ProductInputSchema.safeParse({...product,details:kurti}).success,true);
+  assert.equal("trouser" in kurti,false);
+  const withTrouser=serializeWritableProductDetails("ready_to_wear",{...kurti,trouser:{size_guide:{M:{trouser_length:38}}}});
+  assert.equal(readGarmentSizeGuide(withTrouser).trouser.M?.trouser_length,38);
+  assert.equal(ProductInputSchema.safeParse({...product,details:withTrouser}).success,true);
+  const removed=serializeWritableProductDetails("ready_to_wear",{...withTrouser,trouser:{size_guide:{M:{trouser_length:""}}}});
+  assert.equal("trouser" in removed,false);
+  assert.equal(readGarmentSizeGuide(removed).shirt.M?.chest,21);
+});
+
 test("measurement editing preserves variant UUID, SKU and stock", () => {
   const variants = structuredClone(product.variants);
   const details = updateGarmentMeasurement(product.details, "shirt", "M", "chest", "21.5");
@@ -109,6 +147,8 @@ test("admin measurement matrix is RTW-only and uses existing variant sizes", () 
   assert.match(editor,/variants\.some\(variant=>variant\.is_active&&variant\.size===size\)/);
   assert.match(matrix,/step="0\.01"/);
   assert.match(matrix,/Optional garment measurements in inches/);
+  assert.match(matrix,/Shirt \/ Kurti Measurements \(Optional\)/);
+  assert.match(matrix,/Leave blank if this product does not include trousers/);
 });
 
 test("add and edit flows persist and reload measurements through existing product details", () => {
@@ -123,6 +163,8 @@ test("add and edit flows persist and reload measurements through existing produc
   assert.match(editor,/variants:writableVariants/);
   assert.match(create,/p_product: parsed\.data/);
   assert.match(update,/p_product: parsed\.data/);
+  assert.match(create,/parsed\.error\.issues\[0\]\?\.message/);
+  assert.match(update,/parsed\.error\.issues\[0\]\?\.message/);
   assert.match(editPage,/details:product_details\(\*\)/);
   assert.match(migration,/p_product#>'\{details,shirt\}'/);
   assert.match(migration,/p_product#>'\{details,trouser\}'/);

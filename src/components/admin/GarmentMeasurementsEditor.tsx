@@ -40,7 +40,7 @@ export function GarmentMeasurementsEditor({ sizes, details, onChange }: Props) {
   return (
     <section className="space-y-4 rounded-lg border bg-white p-5" aria-labelledby="garment-measurements-title">
       <div>
-        <h2 id="garment-measurements-title" className="text-lg font-semibold">Garment Measurements / Size Guide</h2>
+        <h2 id="garment-measurements-title" className="text-lg font-semibold">Garment Measurements / Size Guide (Optional)</h2>
         <p className="mt-1 text-sm text-[#6B7280]">Optional garment measurements in inches. Sizes come from the product variants above.</p>
       </div>
       {sizes.length === 0 ? (
@@ -48,11 +48,12 @@ export function GarmentMeasurementsEditor({ sizes, details, onChange }: Props) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border border-[#E5E7EB] bg-white">
-            <thead><tr><th className="sticky left-0 bg-[#F7F7F8] px-3 py-2 text-left text-xs uppercase tracking-wide">Shirt / Kameez</th>{sizes.map((size) => <th key={size} scope="col" className="min-w-24 bg-[#F7F7F8] px-3 py-2 text-sm">{size}</th>)}</tr></thead>
+            <thead><tr><th className="sticky left-0 bg-[#F7F7F8] px-3 py-2 text-left text-xs uppercase tracking-wide">Shirt / Kurti Measurements (Optional)</th>{sizes.map((size) => <th key={size} scope="col" className="min-w-24 bg-[#F7F7F8] px-3 py-2 text-sm">{size}</th>)}</tr></thead>
             <tbody>{rows("shirt", shirtMeasurementFields)}</tbody>
           </table>
           <table className="mt-5 w-full border border-[#E5E7EB] bg-white">
-            <thead><tr><th className="sticky left-0 bg-[#F7F7F8] px-3 py-2 text-left text-xs uppercase tracking-wide">Trouser Measurements</th>{sizes.map((size) => <th key={size} scope="col" className="min-w-24 bg-[#F7F7F8] px-3 py-2 text-sm">{size}</th>)}</tr></thead>
+            <caption className="pb-2 text-left text-sm text-[#6B7280]">Leave blank if this product does not include trousers.</caption>
+            <thead><tr><th className="sticky left-0 bg-[#F7F7F8] px-3 py-2 text-left text-xs uppercase tracking-wide">Trouser Measurements (Optional)</th>{sizes.map((size) => <th key={size} scope="col" className="min-w-24 bg-[#F7F7F8] px-3 py-2 text-sm">{size}</th>)}</tr></thead>
             <tbody>{rows("trouser", trouserMeasurementFields)}</tbody>
           </table>
         </div>

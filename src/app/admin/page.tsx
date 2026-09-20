@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, Boxes, CircleDollarSign, Clock3, Package, ShoppingCart, Truck } from "lucide-react";
 import { requireAdmin } from "@/src/lib/auth/admin";
-import { productInventory } from "@/src/lib/product-commerce";
+import { productInventory, stockStatus } from "@/src/lib/product-commerce";
 
 const money = (value: number) => `Rs. ${Number(value).toLocaleString("en-PK", { maximumFractionDigits: 0 })}`;
 const badge = (status: string) => status === "delivered" ? "bg-[#2F6B4F]/10 text-[#2F6B4F]" : status === "cancelled" ? "bg-[#B44343]/10 text-[#B44343]" : "bg-[#C7A66A]/15 text-[#7A5B22]";
@@ -18,7 +18,7 @@ export default async function AdminDashboard() {
   const lowStockProducts = (lowStock ?? []).map((product) => ({
     ...product,
     inventory: productInventory(product),
-  })).filter((product) => product.inventory > 0 && product.inventory <= 5)
+  })).filter((product) => stockStatus(product.inventory) === "low_stock")
     .sort((a, b) => a.inventory - b.inventory)
     .slice(0, 8);
   const cards = [

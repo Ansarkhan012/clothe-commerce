@@ -34,6 +34,35 @@ function objectValue(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+const partKeys = ["included", "fabric", "length", "width"] as const;
+const measurementKeys = [...shirtMeasurementFields, ...trouserMeasurementFields].map(([key]) => key);
+
+export function serializeOptionalGarmentPart(value: unknown): Record<string, unknown> | undefined {
+  const source = objectValue(value);
+  if (!source) return undefined;
+  const result: Record<string, unknown> = {};
+  for (const key of partKeys) {
+    const field = source[key];
+    if (field !== undefined && field !== null && field !== "") result[key] = field;
+  }
+  const rawGuide = objectValue(source.size_guide);
+  const sizeGuide: Record<string, Record<string, unknown>> = {};
+  if (rawGuide) {
+    for (const size of garmentSizes) {
+      const rawValues = objectValue(rawGuide[size]);
+      if (!rawValues) continue;
+      const values: Record<string, unknown> = {};
+      for (const key of measurementKeys) {
+        const field = rawValues[key];
+        if (field !== undefined && field !== null && field !== "") values[key] = field;
+      }
+      if (Object.keys(values).length) sizeGuide[size] = values;
+    }
+  }
+  if (Object.keys(sizeGuide).length) result.size_guide = sizeGuide;
+  return Object.keys(result).length ? result : undefined;
+}
+
 function readMeasurements(value: unknown): MeasurementBySize {
   const guide = objectValue(objectValue(value)?.size_guide);
   if (!guide) return {};
