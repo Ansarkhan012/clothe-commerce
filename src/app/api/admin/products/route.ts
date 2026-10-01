@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/src/lib/auth/admin";
+import { revalidateTag } from "next/cache";
+import { AdminAuthorizationError, adminErrorResponse, requireAdmin } from "@/src/lib/auth/admin";
 import { logServerDatabaseError } from "@/src/lib/errors/supabase-error";
 import { ProductInputSchema } from "@/src/lib/validations/product";
 
@@ -17,6 +18,7 @@ function databaseErrorResponse(error: DatabaseError) {
 
 export async function POST(request: Request) {
   try {
+    const { serviceClient } = await requireAdmin();
     const text = await request.text();
     if (new TextEncoder().encode(text).byteLength > MAX_BODY) {
       return Response.json({ message: "Product payload is too large" }, { status: 413 });
@@ -32,7 +34,6 @@ export async function POST(request: Request) {
       return Response.json({ message: parsed.error.issues[0]?.message ?? "Invalid product", issues }, { status: 400 });
     }
 
-    const { serviceClient } = await requireAdmin();
     const { data, error } = await serviceClient.rpc("save_product", {
       p_product: parsed.data,
       p_product_id: null,
@@ -42,8 +43,11 @@ export async function POST(request: Request) {
       logServerDatabaseError("Admin product create RPC failed", error);
       return databaseErrorResponse(error);
     }
+    // Storefront catalog caches (tag "products") must not keep serving the old product.
+    revalidateTag("products", { expire: 0 });
     return Response.json({ id: data }, { status: 201 });
   } catch (error) {
+    if (error instanceof AdminAuthorizationError) return adminErrorResponse(error);
     logServerDatabaseError("Admin product create failed", error);
     return Response.json({ message: "Unable to save product" }, { status: 500 });
   }

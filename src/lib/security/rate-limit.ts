@@ -41,7 +41,10 @@ export function getRequestIp(request: Request) {
 export async function consumeRateLimit(
   key: string,
   limit: number,
-  windowMs: number
+  windowMs: number,
+  // Opt-in for non-critical endpoints (e.g. reviews): deny instead of allowing when the
+  // limiter itself is unavailable. Checkout keeps the default (availability first).
+  { failClosed = false }: { failClosed?: boolean } = {}
 ) {
   // Don't use the distributed production limiter during local development.
   if (process.env.NODE_ENV !== "production") {
@@ -70,12 +73,12 @@ export async function consumeRateLimit(
         message: error.message,
       });
 
-      return true;
+      return !failClosed;
     }
 
     if (data !== true && data !== false) {
       console.error("Distributed rate limiter returned an invalid decision; request allowed");
-      return true;
+      return !failClosed;
     }
 
     return data;
@@ -83,7 +86,7 @@ export async function consumeRateLimit(
     console.error("Distributed rate limiter failed unexpectedly; request allowed", {
       message: error instanceof Error ? error.message : "Unknown rate limiter error",
     });
-    return true;
+    return !failClosed;
   }
 }
 

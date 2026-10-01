@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { connection } from "next/server";
 import { ArrowRight } from "lucide-react";
 import HeroSection from "@/src/components/home/HeroSection";
 import { TrustStrip } from "@/src/components/home/TrustStrip";
 import { CategorySection } from "@/src/components/home/CategorySection";
+import { CustomerReviews } from "@/src/components/home/CustomerReviews";
 import { ProductCard } from "@/src/components/common/ProductCard";
 import { getCatalogCategoryItems, getLatestProducts } from "@/src/lib/catalog";
 
@@ -34,6 +36,8 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-6 lg:grid-cols-4">{sale.map((product) => <ProductCard key={product.id} product={product} />)}</div>
       </div>
     </section>}
+
+    <Suspense fallback={null}><CustomerReviews /></Suspense>
 
     <section className="mx-auto grid max-w-[1440px] gap-8 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:px-12">
       <div className="brand-pattern min-h-80 bg-brand-green-dark p-8 text-white sm:p-12"><p className="text-[10px] tracking-[0.28em] text-brand-gold">OUR PHILOSOPHY</p><h2 className="mt-4 max-w-md font-display text-4xl leading-tight">Elegance Woven With Faith</h2><p className="mt-5 max-w-lg text-sm leading-7 text-white/70">QurZaib Fabrics brings together modest elegance, considered detail, and the rich expression of Pakistani textiles.</p><Link href="/about" className="mt-8 inline-flex items-center gap-2 border-b border-brand-gold pb-1 text-xs text-brand-gold">Discover our story <ArrowRight size={14} /></Link></div>

@@ -33,8 +33,11 @@ export function isValidPersistedCartLine(value: unknown): value is PersistedCart
   const variantId = typeof line.variantId === "string" && uuid.test(line.variantId) ? line.variantId : undefined;
   if (line.lineKey !== `${line.id}:${variantId ?? "base"}`) return false;
 
+  // Colour is a display-only snapshot; the server re-validates the variant ID. Variants
+  // without a colour are valid in the database, so an absent colour must not drop the line.
+  const validOptionalColor = line.color === undefined || (typeof line.color === "string" && Boolean(line.color.trim()));
   if (line.productType === "ready_to_wear") {
-    if (!variantId || typeof line.sku !== "string" || !line.sku.trim() || typeof line.color !== "string" || !line.color.trim()) return false;
+    if (!variantId || typeof line.sku !== "string" || !line.sku.trim() || !validOptionalColor) return false;
     if (typeof line.size !== "string" || !sizes.has(line.size) || !Number.isInteger(line.quantity)) return false;
   } else if (line.productType === "loose_fabric") {
     if (variantId || line.size !== undefined || !["meter", "yard"].includes(String(line.sellingUnit))) return false;
@@ -43,7 +46,7 @@ export function isValidPersistedCartLine(value: unknown): value is PersistedCart
     if (!isValidMeasuredQuantity(line.quantity, minimum, step)) return false;
   } else {
     if (line.size !== undefined || !Number.isInteger(line.quantity)) return false;
-    if (variantId && (typeof line.sku !== "string" || !line.sku.trim() || typeof line.color !== "string" || !line.color.trim())) return false;
+    if (variantId && (typeof line.sku !== "string" || !line.sku.trim() || !validOptionalColor)) return false;
     if (!variantId && (line.sku !== undefined || line.color !== undefined)) return false;
   }
   return true;

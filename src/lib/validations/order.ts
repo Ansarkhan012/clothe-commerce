@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { pakistanProvinces } from "../../config/business.ts";
+import { pakistanProvinces, TERMS_REQUIRED_MESSAGE } from "../../config/business.ts";
+
+export { TERMS_REQUIRED_MESSAGE };
 
 export const MAX_CART_LINES = 30;
 export const MAX_QUANTITY_PER_ITEM = 20;
@@ -29,8 +31,13 @@ export const CheckoutSchema = z.object({
   delivery_notes: z.string().trim().max(500).default(""),
   payment_method: z.literal("cod"),
   idempotency_key: z.string().uuid(),
+  // Mandatory Terms & Privacy acknowledgement. Never implies marketing consent.
+  terms_accepted: z.literal(true, { error: TERMS_REQUIRED_MESSAGE }),
   items: z.array(CheckoutItemSchema).min(1).max(MAX_CART_LINES),
 }).strict();
+
+export const isMissingTermsAcceptance = (issues: readonly { path: PropertyKey[] }[]) =>
+  issues.some((issue) => issue.path[0] === "terms_accepted");
 
 export const TrackOrderSchema = z.object({
   public_order_id: z.string().trim().toUpperCase().regex(/^QZF-[A-F0-9]{12}$/),

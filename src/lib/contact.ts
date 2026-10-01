@@ -3,8 +3,10 @@ export const BUSINESS_PHONE = "+92 313 6696456";
 export const BUSINESS_PHONE_TEL = "tel:+923136696456";
 export const BUSINESS_LANDLINE = "021-34502918";
 export const BUSINESS_LANDLINE_TEL = "tel:+922134502918";
-export const WHATSAPP_NUMBER = "923136696456";
-export const WHATSAPP_DISPLAY = "+92 313 6696456";
+// WhatsApp is intentionally separate from BUSINESS_PHONE (call/mobile line).
+// wa.me requires the international number without "+" or separators.
+export const WHATSAPP_NUMBER = "923712284508";
+export const WHATSAPP_DISPLAY = "+92 371 2284508";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 export const WHATSAPP_MESSAGE =
   "Assalamualaikum, I would like to know more about QurZaib Fabrics.";

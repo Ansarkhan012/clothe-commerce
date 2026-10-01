@@ -29,6 +29,37 @@ export function resolveProductVariant<T extends Pick<ProductVariant, "color_id" 
   );
 }
 
+type SelectableVariant = Pick<ProductVariant, "color_id" | "size" | "stock_quantity"> & { color?: { id: string; name: string } | null };
+
+/**
+ * Resolves the storefront option state without extra clicks. A product with exactly
+ * one purchasable colour uses it automatically, and a ready-to-wear product whose
+ * current colour offers exactly one in-stock size uses that size. The result is derived
+ * (not stored in effect-driven state) so server and client render identically.
+ */
+export function deriveVariantSelection<T extends SelectableVariant>(
+  variants: T[],
+  productType: ProductType,
+  chosenColorId: string | null,
+  chosenSize: string
+) {
+  const colors = [...new Map(
+    variants.filter((variant) => variant.color_id && variant.color).map((variant) => [variant.color_id, variant.color!])
+  ).values()];
+  const colorId = chosenColorId && colors.some((color) => color.id === chosenColorId)
+    ? chosenColorId
+    : colors.length === 1 ? colors[0].id : null;
+  const colorVariants = variants.filter((variant) => !colors.length || variant.color_id === colorId);
+  const sizes = [...new Set(colorVariants.map((variant) => variant.size).filter((size): size is NonNullable<typeof size> => Boolean(size)))];
+  const inStockSizes = sizes.filter((size) => colorVariants.some((variant) => variant.size === size && Number(variant.stock_quantity) > 0));
+  const chosenSizeIsValid = sizes.includes(chosenSize as NonNullable<T["size"]>);
+  const size = productType !== "ready_to_wear"
+    ? ""
+    : chosenSizeIsValid ? chosenSize
+      : sizes.length === 1 && inStockSizes.length === 1 ? inStockSizes[0] : "";
+  return { colors, colorId, sizes, size, autoSelectedColor: colorId !== null && colorId !== chosenColorId, autoSelectedSize: size !== "" && size !== chosenSize };
+}
+
 export const effectiveProductPrice = (product: Product): number => {
   const base = Number(product.price);
   const sale = product.sale_price === null ? null : Number(product.sale_price);

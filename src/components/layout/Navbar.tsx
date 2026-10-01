@@ -19,7 +19,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/new-arrivals", label: "New Arrivals" },
   { href: "/collections", label: "Collections" },
-  { href: "/collections?category=Unstitched", label: "Unstitched" },
+  { href: "/collections?type=unstitched", label: "Unstitched" },
   { href: "/sale", label: "Sale" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },

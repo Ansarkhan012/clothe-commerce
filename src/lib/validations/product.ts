@@ -44,6 +44,9 @@ export const ProductInputSchema = z.discriminatedUnion("product_type", [
   if(value.product_type!=="ready_to_wear"&&value.variants.some(v=>v.size!==null))ctx.addIssue({code:"custom",message:"Sizes are only valid for ready to wear",path:["variants"]});
   const skus=value.variants.map(v=>v.sku.trim().toLowerCase());
   if(new Set(skus).size!==skus.length)ctx.addIssue({code:"custom",message:"Variant SKUs must be unique",path:["variants"]});
+  // Mirrors product_variants_combination_uidx, which also covers inactive rows.
+  const combinations=value.variants.map(v=>`${v.color_id??""}|${v.size??""}`);
+  if(new Set(combinations).size!==combinations.length)ctx.addIssue({code:"custom",message:"Each color / size combination can only be listed once. Reactivate the existing row instead of adding a duplicate.",path:["variants"]});
 });
 
 export type ProductInput=z.infer<typeof ProductInputSchema>;

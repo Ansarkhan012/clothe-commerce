@@ -1,4 +1,4 @@
-import { CheckoutSchema, normalizeCheckoutItems } from "@/src/lib/validations/order";
+import { CheckoutSchema, isMissingTermsAcceptance, normalizeCheckoutItems, TERMS_REQUIRED_MESSAGE } from "@/src/lib/validations/order";
 import { createServiceClient } from "@/src/lib/supabase/service";
 import { consumeRateLimit, getRequestIp, rateLimitExceededResponse } from "@/src/lib/security/rate-limit";
 import { sendOrderEmails } from "@/src/lib/email/send-order-emails";
@@ -88,6 +88,13 @@ export async function POST(request: Request) {
             code: issue.code,
             message: issue.message,
           }))
+        );
+      }
+
+      if (isMissingTermsAcceptance(parsed.error.issues)) {
+        return Response.json(
+          { message: `${TERMS_REQUIRED_MESSAGE} If you do not see the checkbox, refresh the page.`, field: "terms_accepted" },
+          { status: 400 }
         );
       }
 

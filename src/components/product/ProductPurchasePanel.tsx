@@ -1,8 +1,8 @@
 "use client";
 import { Check, Minus, Plus, ShoppingBag, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
-import { activeVariants, effectiveProductPrice, hasValidSale, isValidMeasuredQuantity, productInventory, resolveProductVariant } from "@/src/lib/product-commerce";
+import { useRef, useState } from "react";
+import { activeVariants, deriveVariantSelection, effectiveProductPrice, hasValidSale, isValidMeasuredQuantity, productInventory, resolveProductVariant } from "@/src/lib/product-commerce";
 import { useCartStore } from "@/src/store/useCartStore";
 import type { Product } from "@/src/types/supabase";
 import { productTypeLabels } from "@/src/types/product";
@@ -13,9 +13,9 @@ const money=(n:number)=>`PKR ${Number(n).toLocaleString("en-PK")}`;
 export function ProductPurchasePanel({product}:{product:Product}) {
  const router=useRouter();
  const type=product.product_type??"unstitched", variants=activeVariants(product), details=product.details;
- const colors=useMemo(()=>[...new Map(variants.filter(v=>v.color_id&&v.color).map(v=>[v.color_id,v.color!])).values()],[variants]);
- const [colorId,setColorId]=useState<string|null>(null),[size,setSize]=useState(""),[sizeGuideOpen,setSizeGuideOpen]=useState(false);
- const sizes=[...new Set(variants.filter(v=>!colors.length||v.color_id===colorId).map(v=>v.size).filter((v):v is NonNullable<typeof v>=>Boolean(v)))];
+ const [chosenColorId,setColorId]=useState<string|null>(null),[chosenSize,setSize]=useState(""),[sizeGuideOpen,setSizeGuideOpen]=useState(false);
+ // A single colour (and a single in-stock size) is applied automatically; see deriveVariantSelection.
+ const {colors,colorId,sizes,size}=deriveVariantSelection(variants,type,chosenColorId,chosenSize);
  const selected=resolveProductVariant(variants,type,colorId,size);
  const minimum=type==="loose_fabric"?Number(details?.minimum_quantity??1):1,step=type==="loose_fabric"?Number(details?.quantity_step??1):1;
  const [quantity,setQuantity]=useState(minimum),[added,setAdded]=useState(false),[buying,setBuying]=useState(false);

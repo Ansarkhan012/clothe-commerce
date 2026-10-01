@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/src/components/common/ProductCard";
 import { ProductGallery } from "@/src/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/src/components/product/ProductPurchasePanel";
+import { ProductReviews } from "@/src/components/product/ProductReviews";
 import { getProduct, getRelatedProducts } from "@/src/lib/catalog";
 import { productHref } from "@/src/lib/product-commerce";
 
@@ -31,6 +33,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <ProductPurchasePanel product={product} />
       </div>
     </div>
+
+    <Suspense fallback={null}><ProductReviews productId={product.id} /></Suspense>
 
     {related.length > 0 && <section className="mt-14 border-t border-border bg-white py-14 sm:py-18">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">

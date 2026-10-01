@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { AdminAuthorizationError, adminErrorResponse, requireAdmin } from "@/src/lib/auth/admin";
@@ -9,21 +10,23 @@ const ProductActionSchema = z.object({ action: z.literal("archive") }).strict();
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    const { serviceClient } = await requireAdmin();
     if (!z.string().uuid().safeParse(id).success) return Response.json({ message: "Invalid product" }, { status: 400 });
     const parsed = ProductInputSchema.safeParse(await request.json());
     if (!parsed.success) {
       const issues = parsed.error.flatten().fieldErrors;
       return Response.json({ message: parsed.error.issues[0]?.message ?? "Invalid product", issues }, { status: 400 });
     }
-    const { serviceClient } = await requireAdmin();
     const { data, error } = await serviceClient.rpc("save_product", { p_product: parsed.data, p_product_id: id });
     if (error) {
       if (error.code === "23505") return Response.json({ message: "The product slug or a variant SKU is already in use" }, { status: 409 });
       if (error.message.includes("PRODUCT_TYPE_LOCKED")) return Response.json({ message: "Product type cannot change after variants or orders exist" }, { status: 409 });
       throw error;
     }
+    revalidateTag("products", { expire: 0 });
     return Response.json({ id: data });
   } catch (error) {
+    if (error instanceof AdminAuthorizationError) return adminErrorResponse(error);
     logServerDatabaseError("Admin product update failed", error);
     return Response.json({ message: "Unable to save product" }, { status: 500 });
   }
@@ -45,8 +48,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .maybeSingle();
     if (error) throw error;
     if (!data) return Response.json({ message: "Product not found" }, { status: 404 });
+    revalidateTag("products", { expire: 0 });
     return Response.json({ success: true });
   } catch (error) {
+    if (error instanceof AdminAuthorizationError) return adminErrorResponse(error);
     logServerDatabaseError("Admin product archive failed", error);
     return Response.json({ message: "Unable to archive product" }, { status: 500 });
   }
@@ -74,6 +79,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     // Product image objects are intentionally retained: URL ownership is not
     // exclusive in the current schema, so deleting Storage objects is unsafe.
+    revalidateTag("products", { expire: 0 });
     return Response.json({ success: true });
   } catch (error) {
     if (error instanceof AdminAuthorizationError) return adminErrorResponse(error);

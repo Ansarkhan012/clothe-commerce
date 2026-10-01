@@ -23,6 +23,9 @@ export const businessConfig = {
   disputeJurisdiction: null as string | null,
 } as const;
 
+export const TERMS_REQUIRED_MESSAGE =
+  "Please accept the Terms & Conditions and Privacy Policy to place your order.";
+
 export const pakistanProvinces = [
   "Sindh",
   "Punjab",

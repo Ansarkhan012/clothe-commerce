@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import type { Product } from "@/src/types/supabase";
+import { hasValidCatalogFilterValues } from "@/src/lib/catalog-filters";
 
 export const productFields = "id,title,slug,product_type,short_description,description,price,sale_price,compare_at_price,category,category_id,subcategory_id,featured,is_new,is_active,status,images,sizes,stock,base_sku,primary_color_id,created_at,updated_at,details:product_details(*),variants:product_variants(*,color:colors(*)),category_record:categories!products_category_id_fkey(*),primary_color:colors!products_primary_color_id_fkey(*)";
 
@@ -15,7 +16,9 @@ function publicCatalogClient() {
 function normalizeProduct(row: Record<string, unknown>): Product {
   const one = <T>(value: unknown): T | null => Array.isArray(value) ? (value[0] as T | undefined) ?? null : (value as T | null);
   const variants = Array.isArray(row.variants) ? row.variants.filter((variant) => (variant as { is_active?: boolean }).is_active === true) : [];
-  return { ...row, variants, details: one(row.details), category_record: one(row.category_record), primary_color: one(row.primary_color) } as Product;
+  const product = { ...row };
+  delete product.size_filter; // helper embed used only for filtering by size
+  return { ...product, variants, details: one(row.details), category_record: one(row.category_record), primary_color: one(row.primary_color) } as Product;
 }
 
 export const getLatestProducts = unstable_cache(async (limit = 12) => {
@@ -50,13 +53,17 @@ export const getRelatedProducts = unstable_cache(async (categoryId: string | nul
 export type CatalogFilters = { q: string; category: string; productType: string; size: string; availability: string; sale: boolean; min: number | null; max: number | null; sort: string; page: number; pageSize: number };
 
 export const getCatalogPage = unstable_cache(async (filters: CatalogFilters) => {
-  let query = publicCatalogClient().from("products").select(productFields, { count: "exact" }).eq("is_active", true).eq("status", "active");
+  if (!hasValidCatalogFilterValues(filters)) return { products: [] as Product[], total: 0 };
+  // Filtering the `variants` embed only trimmed each product's variant list (cards then showed
+  // "Sold Out") without filtering products. A separate inner-joined alias filters the parents.
+  const select: string = filters.size ? `${productFields},size_filter:product_variants!inner(size)` : productFields;
+  let query = publicCatalogClient().from("products").select(select, { count: "exact" }).eq("is_active", true).eq("status", "active");
   const safe = filters.q.replace(/[%(),]/g, "");
   if (safe) query = query.or(`title.ilike.%${safe}%,category.ilike.%${safe}%,description.ilike.%${safe}%`);
   if (filters.category) query = query.eq("category_id", filters.category);
   if (filters.productType) query = query.eq("product_type", filters.productType);
   if (filters.sale) query = query.not("sale_price", "is", null);
-  if (filters.size) query = query.eq("product_variants.size", filters.size);
+  if (filters.size) query = query.eq("size_filter.size", filters.size).eq("size_filter.is_active", true);
   if (filters.min !== null) query = query.gte("price", filters.min);
   if (filters.max !== null) query = query.lte("price", filters.max);
   if (filters.sort === "price_asc") query = query.order("price", { ascending: true });
@@ -66,7 +73,7 @@ export const getCatalogPage = unstable_cache(async (filters: CatalogFilters) => 
   const from = (filters.page - 1) * filters.pageSize;
   const { data, count, error } = await query.range(from, from + filters.pageSize - 1);
   if (error) throw new Error("CATALOG_UNAVAILABLE");
-  let products = (data ?? []).map((row)=>normalizeProduct(row));
+  let products = ((data ?? []) as unknown as Record<string, unknown>[]).map((row)=>normalizeProduct(row));
   if (filters.availability === "in_stock") products = products.filter((product) => {
     const variants = product.variants ?? [];
     return variants.length ? variants.some((variant) => Number(variant.stock_quantity) > 0) : Number(product.stock) > 0;

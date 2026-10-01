@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { BarChart3, Boxes, ExternalLink, FolderTree, Layers3, LogOut, Menu, Package, Palette, Plus, Settings, ShoppingCart, X } from "lucide-react";
+import { BarChart3, Boxes, ExternalLink, FolderTree, Layers3, LogOut, Menu, Package, Palette, Plus, Settings, ShoppingCart, Star, X } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/Client";
 
 const navigation = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/inventory", label: "Inventory", icon: Boxes },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/collections", label: "Collections", icon: Layers3 },
@@ -23,6 +24,7 @@ function titleFor(pathname: string) {
   if (pathname.startsWith("/admin/products")) return "Products";
   if (pathname.startsWith("/admin/orders/")) return "Order details";
   if (pathname.startsWith("/admin/orders")) return "Orders";
+  if (pathname.startsWith("/admin/reviews")) return "Reviews";
   if (pathname.startsWith("/admin/inventory")) return "Inventory";
   if (pathname.startsWith("/admin/categories")) return "Categories";
   if (pathname.startsWith("/admin/collections")) return "Collections";
