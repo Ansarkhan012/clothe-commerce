@@ -13,7 +13,8 @@ test("direct customer contact links use one public contact module", () => {
   assert.match(config, /BUSINESS_PHONE_TEL = "tel:\+923136696456"/);
   assert.match(config, /BUSINESS_LANDLINE = "021-34502918"/);
   assert.match(config, /BUSINESS_LANDLINE_TEL = "tel:\+922134502918"/);
-  assert.match(config, /WHATSAPP_NUMBER = "923136696456"/);
+  assert.match(config, /WHATSAPP_NUMBER = "923712284508"/);
+  assert.match(config, /WHATSAPP_DISPLAY = "\+92 371 2284508"/);
   assert.match(config, /Assalamualaikum, I would like to know more about QurZaib Fabrics\./);
   for (const source of [footer, contact]) {
     assert.match(source, /BUSINESS_EMAIL/);
@@ -85,4 +86,15 @@ test("official social profiles are centralized and rendered accessibly", () => {
     assert.match(source, /target="_blank"/);
     assert.match(source, /rel="noopener noreferrer"/);
   }
+});
+
+test("WhatsApp link uses the canonical wa.me format and keeps the encoded greeting", async () => {
+  const contact = await import("../src/lib/contact.ts");
+  assert.equal(contact.WHATSAPP_URL, "https://wa.me/923712284508");
+  assert.match(contact.WHATSAPP_NUMBER, /^92\d{10}$/, "wa.me numbers carry no plus sign or separators");
+  const url = new URL(contact.WHATSAPP_CONTACT_URL);
+  assert.equal(`${url.origin}${url.pathname}`, "https://wa.me/923712284508");
+  assert.equal(url.searchParams.get("text"), contact.WHATSAPP_MESSAGE);
+  assert.match(contact.WHATSAPP_CONTACT_URL, /\?text=Assalamualaikum%2C%20I%20would/);
+  assert.doesNotMatch(contact.WHATSAPP_CONTACT_URL, /3136696456/, "old WhatsApp number must not be linked");
 });

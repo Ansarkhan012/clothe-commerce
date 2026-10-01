@@ -22,6 +22,7 @@ const baseCheckout = {
   delivery_notes: "",
   payment_method: "cod",
   idempotency_key: "22222222-2222-4222-8222-222222222222",
+  terms_accepted: true,
   items: [{ product_id: productId, size: "M", quantity: 1 }],
 };
 

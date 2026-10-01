@@ -10,8 +10,10 @@ test("public API rate limiting is distributed, atomic, bypassed outside producti
   assert.match(limiter, /createHash\("sha256"\)/);
   assert.match(limiter, /rpc\("consume_api_rate_limit"/);
   assert.match(limiter, /NODE_ENV !== "production"[\s\S]*return true/);
-  assert.match(limiter, /if \(error\)[\s\S]*request allowed[\s\S]*return true/);
-  assert.match(limiter, /catch \(error\)[\s\S]*request allowed[\s\S]*return true/);
+  // Default stays fail-open (availability first); endpoints may opt in to failClosed.
+  assert.match(limiter, /\{ failClosed = false \}/);
+  assert.match(limiter, /if \(error\)[\s\S]*request allowed[\s\S]*return !failClosed/);
+  assert.match(limiter, /catch \(error\)[\s\S]*request allowed[\s\S]*return !failClosed/);
   assert.match(migration, /on conflict \(key_hash\) do update/);
   assert.match(migration, /revoke all on function[\s\S]*anon, authenticated/);
   assert.match(migration, /grant execute on function[\s\S]*service_role/);
